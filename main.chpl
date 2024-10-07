@@ -7,86 +7,85 @@ use LinearAlgebra;
 use IO.FormattedIO;
 use Math;
 use AllLocalesBarriers;
+use Zarr;
 
-use NetCDF_IO;
-use RK3;
 use INPUTS;
-use params;
 use domains;
+
 use dynamics;
 use horizontal_diffusion;
 use tracers;
+use updates;
+
+use NetCDF_IO;
+use RK3;
 use PPM;
-use Zarr;
+//use params;
+
 
 proc main() {
 
   var t : stopwatch;
   t.start();
 
-  coforall loc in Locales with (ref H_n) do on loc {
+  initialize_tr();
+  initialize_sponge();
+  initialize_dynamics();
 
-    // Create and initialize variables and classes
-    var P = new owned Params();
-    var D = new owned Domains();
+  // timestepping loop
+    for step in (Nt_start)..(Nt_start+Nt) {
 
-    set_domains(D, D3, D_grid);
+      prepare_to_timestep(step);
 
-    initialize_tr(D, P);
-    initialize_sponge(D, P);
+      coforall loc in Locales do on loc {
+          var t1 : stopwatch;
+          var t2 : stopwatch;
+          var t3 : stopwatch;
+          var t4 : stopwatch;
 
-    var Dyn = new Dynamics(D);
-    var Diff = new Diffusion(D);
-
-    // Load fields for the first timestep
-      update_dynamics(Dyn.u_n, Dyn.v_n, Dyn.U_n, Dyn.V_n, H_n, D, P, P.Nt_start);
-
-    // Load fields for the next timestep
-      update_thickness(zeta_np1, H_np1, H0, h, D, P, P.Nt_start+1);
-      update_dynamics(Dyn.u_np1, Dyn.v_np1, Dyn.U_np1, Dyn.V_np1, H_np1, D, P, P.Nt_start+1);
-
-    // timestepping loop
-      for step in (P.Nt_start)..(P.Nt_start+P.Nt) {
-
-        var t1 : stopwatch;
-        var t2 : stopwatch;
-        var t3 : stopwatch;
-        var t4 : stopwatch;
-
-        // Step forward
+          // Step forward
 
           t1.start();
-          Explicit_TimeStep(Dyn, Diff, D, P, step);
+          Explicit_TimeStep(step);
           t1.stop();
 
           t2.start();
-          Implicit_TimeStep(Dyn, Diff, D, P, step);
+          Implicit_TimeStep(step);
           t2.stop();
 
-        // Create polynomial fit to current grid
+          // Create polynomial fit to current grid
+
           t3.start();
-          Polyfit(D, P);
+          Polyfit();
           t3.stop();
 
-        WriteOutput(tracer_n, "after", "stuff", step);
-        allLocalesBarrier.barrier();
+          // Update fields to prepare for next time step
 
-
-        // Update fields to prepare for next time step
           t4.start();
-          update_fields(Dyn, Diff, D, P, step);
+          prepare_next_timestep(step);
           t4.stop();
 
-        writeln("Locale ", here.id, " time for explicit step: ", t1.elapsed());
-        writeln("Locale ", here.id, " time for implicit step: ", t2.elapsed());
-        writeln("Locale ", here.id, " time for polyfit: ", t3.elapsed());
-        writeln("Locale ", here.id, " time for reading: ", t4.elapsed());
+// NEED TO WRITE ZARR OUTSIDE OF COFORALL LOOP
+          WriteOutput(tracer_n, "after", "stuff", step);
+          allLocalesBarrier.barrier();
 
-      } // timestepping loop
+          writeln("Locale ", here.id, " time for explicit step: ", t1.elapsed());
+          writeln("Locale ", here.id, " time for implicit step: ", t2.elapsed());
+          writeln("Locale ", here.id, " time for polyfit: ", t3.elapsed());
+//          writeln("Locale ", here.id, " time for reading: ", t4.elapsed());
 
-  } // coforall loop
+      } // coforall loop
+
+//  var (maxVal, maxLoc) = maxloc reduce zip(tracer_dagger, tracer_dagger.domain);
+//  var (minVal, minLoc) = minloc reduce zip(tracer_dagger, tracer_dagger.domain);
+
+//  writeln("Max of v is ", maxVal, ' at ', maxLoc);
+//  writeln("Min of v is ", minVal, ' at ', minLoc);
+
+    } // timestepping loop
 
   t.stop();
   writeln("Program finished in ", t.elapsed(), " seconds.");
+
 
 } // end program

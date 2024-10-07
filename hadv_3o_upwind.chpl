@@ -1,13 +1,13 @@
 use INPUTS;
 use dynamics;
-use params;
+//use params;
 use domains;
 use tracers;
 
 use Time;
 use AllLocalesBarriers;
 
-proc calc_horizontal_fluxes(ref U, ref V, ref tmp_U, ref tmp_V, D: Domains, P: Params, ref arr) {
+proc calc_horizontal_fluxes(ref U, ref V, ref tmp_U, ref tmp_V, ref arr) {
 
   // Horizontal: upstream-biased parabolic interpolation: SM05, after 4.13
   // Near open boundaries this method will assume the point "beyond" the edge has the same value as the edge
@@ -15,7 +15,7 @@ proc calc_horizontal_fluxes(ref U, ref V, ref tmp_U, ref tmp_V, D: Domains, P: P
   /////////////////////////////////////////
   //              U-fluxes               //
   /////////////////////////////////////////
-
+/*
   if (here.id == 0) {
 
     forall (k,j,i) in {D.u_3D.dim[0], D.u_3D.dim[1], D.u_3D.first[2]..D.u_3D.first[2]} {
@@ -51,11 +51,21 @@ proc calc_horizontal_fluxes(ref U, ref V, ref tmp_U, ref tmp_V, D: Domains, P: P
                            +  P.one_sixth * min(U[k,j,i], 0.0) * (arr[k,j,i+2] - 2*arr[k,j,i+1] + arr[k,j,i]));
     }
   }
+*/
+
+//    var fluffDom_u = D3_u.localSubdomain().expand(fluff3D);
+//    forall (k,j,i) in fluffDom_u {
+    forall (k,j,i) in D3_u.localSubdomain() {
+      tmp_U[k,j,i] = 0.5*(arr[k,j,i] + arr[k,j,i+1]) * U[k,j,i] - mask_rho[j,i+2]*
+                             (one_sixth * max(U[k,j,i], 0.0) * (arr[k,j,i+1] - arr[k,j,i])
+                           +  one_sixth * min(U[k,j,i], 0.0) * (arr[k,j,i+2] - 2*arr[k,j,i+1] + arr[k,j,i]));
+  }
+
 
   /////////////////////////////////////////
   //              V-fluxes               //
   /////////////////////////////////////////
-
+/*
   forall (k,j,i) in {D.v_3D.dim[0], D.v_3D.first[1]..D.v_3D.first[1], D.v_3D.dim[2]} {
     tmp_V[k,j,i] = 0.5*(arr[k,j,i] + arr[k,j+1,i]) * V[k,j,i] - mask_rho[j+2,i]*
                              (P.one_sixth * max(V[k,j,i], 0.0) * (arr[k,j+1,i] - arr[k,j,i])
@@ -72,6 +82,15 @@ proc calc_horizontal_fluxes(ref U, ref V, ref tmp_U, ref tmp_V, D: Domains, P: P
     tmp_V[k,j,i] = 0.5*(arr[k,j,i] + arr[k,j+1,i]) * V[k,j,i] - mask_rho[j-1,i]*mask_rho[j+2,i]*
                              (P.one_sixth * max(V[k,j,i], 0.0) * (arr[k,j+1,i] - 2*arr[k,j,i] + arr[k,j-1,i])
                            +  P.one_sixth * min(V[k,j,i], 0.0) * (arr[k,j+2,i] - 2*arr[k,j+1,i] + arr[k,j,i]));
+  }
+*/
+
+//  var fluffDom_v = D3_v.localSubdomain().expand(fluff3D);
+//  forall (k,j,i) in fluffDom_v {
+  forall (k,j,i) in D3_v.localSubdomain() {
+    tmp_V[k,j,i] = 0.5*(arr[k,j,i] + arr[k,j+1,i]) * V[k,j,i] - mask_rho[j-1,i]*mask_rho[j+2,i]*
+                             (one_sixth * max(V[k,j,i], 0.0) * (arr[k,j+1,i] - 2*arr[k,j,i] + arr[k,j-1,i])
+                           +  one_sixth * min(V[k,j,i], 0.0) * (arr[k,j+2,i] - 2*arr[k,j+1,i] + arr[k,j,i]));
   }
 
   allLocalesBarrier.barrier();

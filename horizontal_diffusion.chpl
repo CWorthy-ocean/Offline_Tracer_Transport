@@ -1,11 +1,11 @@
-use params;
-use tracers;
-use domains;
-use INPUTS;
-use sigma_coordinate;
-
 use AllLocalesBarriers;
 
+use INPUTS;
+use domains;
+//use sigma_coordinate;
+use tracers;
+
+/*
 record Diffusion {
 
   var u0, u1, u2 = 1..0;
@@ -33,29 +33,30 @@ record Diffusion {
   }
 
 }
+*/
 
 // Apply Laplacian diffusion in the sponge layer near the domain boundary
 
-proc calc_diffusive_fluxes(ref U, ref V, D: Domains, P: Params, ref arr, ref H) {
+proc calc_diffusive_fluxes(ref U, ref V, ref arr, ref H) {
 
   /////////////////////////////////////////
   //             Zonal fluxes            //
   /////////////////////////////////////////
 
-  forall (k,j,i) in D.u_3D {
+  forall (k,j,i) in D3_u.localSubdomain() {
 
     U[k,j,i] = 0.5*(sponge[k,j,i] + sponge[k,j,i+1]) * (arr[k,j,i+1] - arr[k,j,i])
-                         * P.dy * 0.5 * (H[k,j,i] + H[k,j,i+1]) / P.dx;
+                         * dy * 0.5 * (H[k,j,i] + H[k,j,i+1]) / dx;
   }
 
   /////////////////////////////////////////
   //         Meridional fluxes           //
   /////////////////////////////////////////
 
-  forall (k,j,i) in D.v_3D {
+  forall (k,j,i) in D3_v.localSubdomain() {
 
     V[k,j,i] = 0.5*(sponge[k,j,i] + sponge[k,j+1,i]) * (arr[k,j+1,i] - arr[k,j,i])
-                         * P.dx * 0.5 * (H[k,j,i] + H[k,j+1,i]) / P.dy;
+                         * dx * 0.5 * (H[k,j,i] + H[k,j+1,i]) / dy;
   }
 
   allLocalesBarrier.barrier();
@@ -64,14 +65,17 @@ proc calc_diffusive_fluxes(ref U, ref V, D: Domains, P: Params, ref arr, ref H) 
 
 // Initialize the boundary sponge
 
-proc initialize_sponge(D: Domains, P: Params) {
+proc initialize_sponge() {
 
-  forall (k,j,i) in D.rho_3D {
-    var dist_from_x = min(i, P.Nx - 1 - i);
-    var dist_from_y = min(j, P.Ny - 1 - j);
-    var min_dist = max(0.0, min(dist_from_x, dist_from_y) - 1);
-    var amp = max(0.0, (P.sponge_width - min_dist) / P.sponge_width);
-    sponge[k,j,i] = P.v_sponge * amp;
+  coforall loc in Locales with (ref H_n) do on loc {
+    forall (k,j,i) in D3.localSubdomain() {
+    //forall (k,j,i) in D.rho_3D {
+      var dist_from_x = min(i, Nx - 1 - i);
+      var dist_from_y = min(j, Ny - 1 - j);
+      var min_dist = max(0.0, min(dist_from_x, dist_from_y) - 1);
+      var amp = max(0.0, (sponge_width - min_dist) / sponge_width);
+      sponge[k,j,i] = v_sponge * amp;
+    }
   }
 }
 

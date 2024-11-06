@@ -1,15 +1,10 @@
-use INPUTS;
-use dynamics;
-use domains;
-use tracers;
-//use params;
-use NetCDF_IO;
-//use utils;
-
-use LAPACK;
-use Math;
 use AllLocalesBarriers;
-use Time;
+
+use domains;
+use dynamics;
+use INPUTS;
+use NetCDF_IO;
+use tracers;
 
 
 // This function will apply the piecewise parabolic method (PPM) as described in
@@ -96,14 +91,6 @@ proc Polyfit() {
 
       }
     }
-
-/*
-    // Adjust values to satisfy conservation.
-    var integrated_orig = (+ reduce (H_orig * tracer_dagger[..,j,i]) );
-    var integrated_new  = (+ reduce (H_new * reconstruction) );
-    var int_ratio = integrated_orig / integrated_new;
-    reconstruction = reconstruction * int_ratio;
-*/
 
     for kk in 0..<Nz {
       tracer_n[kk,j,i] = reconstruction[kk];

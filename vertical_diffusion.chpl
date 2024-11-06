@@ -1,11 +1,9 @@
-//use params;
-use INPUTS;
-use domains;
-use tracers;
-//use sigma_coordinate;
-
-
 use AllLocalesBarriers;
+
+use domains;
+use INPUTS;
+use tracers;
+
 
 proc calc_vertical_diffusion(ref arr, ref H) {
 
@@ -42,11 +40,6 @@ proc thomas_diff(j, i, ref arr, ref H) {
     var dp : [Dp] real;
     var x  : [Dp] real;
 
-//    b[1] = 1.0;
-//    b[n] = 1.0;
-//    d[1] = Ts_bot;
-//    d[n] = Ts_top;
-
     a[1] = 0;
     c[1] = -(2*dt*kappa_v[1,j,i]) / (H[0,j,i] * (H[1,j,i]+H[0,j,i]));
     b[1] = 1 - a[1] - c[1];
@@ -58,14 +51,6 @@ proc thomas_diff(j, i, ref arr, ref H) {
     d[n] = arr[n-1,j,i];
 
     for k in 2..<n {
-//      var h0 = H[k-1,j,i];
-//      var h1 = H[k,j,i];
-
-//      var alpha = (h1**2) / ((h0 + h1)**2);
-//      var beta = (h0**2) / ((h0 + h1)**2);
-//      var d1 = 2*(h1**2)*(h1**2 + 2*h0**2 + 3*h0*h1) / ((h0+h1)**4);
-//      var d2 = 2*(h0**2)*(h0**2 + 2*h1**2 + 3*h0*h1) / ((h0+h1)**4);
-
       a[k] = -(2*dt*kappa_v[k-1,j,i]) / (H[k-1,j,i] * (H[k-1,j,i]+H[k-2,j,i]));
       c[k] = -(2*dt*kappa_v[k,j,i]) / (H[k-1,j,i] * (H[k,j,i]+H[k-1,j,i]));
       b[k] = 1 - a[k] - c[k];

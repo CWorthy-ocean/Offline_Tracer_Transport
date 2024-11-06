@@ -1,5 +1,4 @@
 use INPUTS;
-//use params;
 
 use NetCDF.C_NetCDF;
 use CTypes;
@@ -111,7 +110,84 @@ proc set_bry(filename : string, varName : string, ref arr, dom_in) {
 
         /* Determine where to start reading file, and how many elements to read */
 
-        if (here.id == 0) {
+        if (Locales.size == 1) {
+
+          // Start specifies a hyperslab.  It expects an array of dimension sizes
+          var first = dom_in.localSubdomain().first;
+          var last  = dom_in.localSubdomain().last;
+
+          // Count specifies a hyperslab.  It expects an array of dimension sizes
+          var shape = dom_in.localSubdomain().shape;
+
+          var tmp_west : [first[0]..last[0], first[1]..last[1]] real;
+          var tmp_east : [first[0]..last[0], first[1]..last[1]] real;
+          var tmp_north : [first[0]..last[0], first[2]..last[2]] real;
+          var tmp_south : [first[0]..last[0], first[2]..last[2]] real;
+
+          var start_w = (first[0], first[1]);
+          var count_w = (shape[0], shape[1]);
+
+          var start_e = (first[0], first[1]);
+          var count_e = (shape[0], shape[1]);
+
+          var start_n = (first[0], first[2]);
+          var count_n = (shape[0], shape[2]);
+
+          var start_s = (first[0], first[2]);
+          var count_s = (shape[0], shape[2]);
+
+        /* Create arrays of c_size_t for compatibility with NetCDF-C functions. */
+          var start_w_c = [i in 0..#start_w.size] start_w[i] : c_size_t;
+          var count_w_c = [i in 0..#count_w.size] count_w[i] : c_size_t;
+
+          var start_e_c = [i in 0..#start_e.size] start_e[i] : c_size_t;
+          var count_e_c = [i in 0..#count_e.size] count_e[i] : c_size_t;
+
+          var start_n_c = [i in 0..#start_n.size] start_n[i] : c_size_t;
+          var count_n_c = [i in 0..#count_n.size] count_n[i] : c_size_t;
+
+          var start_s_c = [i in 0..#start_s.size] start_s[i] : c_size_t;
+          var count_s_c = [i in 0..#count_s.size] count_s[i] : c_size_t;
+
+          var ncid : c_int;
+          var varid_w : c_int;
+          var varid_e : c_int;
+          var varid_n : c_int;
+          var varid_s : c_int;
+
+        /* Open the file */
+          nc_open(filename.c_str(), NC_NOWRITE, ncid);
+
+        /* Get the variable ID */
+          var vw = varName + "_west";
+          nc_inq_varid(ncid, vw.c_str(), c_ptrTo(varid_w));
+
+          var ve = varName + "_east";
+          nc_inq_varid(ncid, ve.c_str(), c_ptrTo(varid_e));
+
+          var vn = varName + "_north";
+          nc_inq_varid(ncid, vn.c_str(), c_ptrTo(varid_n));
+
+          var vs = varName + "_south";
+          nc_inq_varid(ncid, vs.c_str(), c_ptrTo(varid_s));
+
+          nc_get_vara_double(ncid, varid_w, c_ptrTo(start_w_c), c_ptrTo(count_w_c), c_ptrTo(tmp_west[start_w]));
+          arr[0..<Nz,..,0] = tmp_west;
+
+          nc_get_vara_double(ncid, varid_e, c_ptrTo(start_e_c), c_ptrTo(count_e_c), c_ptrTo(tmp_east[start_e]));
+          arr[0..<Nz,..,last[2]] = tmp_east;
+
+          nc_get_vara_double(ncid, varid_n, c_ptrTo(start_n_c), c_ptrTo(count_n_c), c_ptrTo(tmp_north[start_n]));
+          arr[0..<Nz,last[1],first[2]..last[2]] = tmp_north;
+
+          nc_get_vara_double(ncid, varid_s, c_ptrTo(start_s_c), c_ptrTo(count_s_c), c_ptrTo(tmp_south[start_s]));
+          arr[0..<Nz,0,first[2]..last[2]] = tmp_south;
+
+          nc_close(ncid);
+
+         }
+
+        else if (here.id == 0) {
 
           // Start specifies a hyperslab.  It expects an array of dimension sizes
           var first = dom_in.localSubdomain().first;

@@ -2,16 +2,9 @@ use FileSystem;
 
 /* INPUT PARAMETERS */
 
-//config const gridfile       = '/glade/derecho/scratch/bachman/UCLA-ROMS/Work/Iceland1/INPUT/Iceland1_grd.nc';
-//config const velocity_files = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_avg.??????????????.nc';
-//config const boundary_files = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
-//config const forcing_files  = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
-
-config const maskfile       = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUTS_FULL/Iceland1_grd.zarr/mask/';
-config const hfile          = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUTS_FULL/Iceland1_grd.zarr/h/';
-config const velocity_files = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUTS_FULL/Iceland1_avg.??????????????.zarr';
-//config const velocity_files = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_avg.??????????????.nc';
-//config const boundary_files = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUTS_FULL/Iceland1_avg.??????????????_bry.zarr';
+config const maskfile       = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/mask/';
+config const hfile          = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/h/';
+config const velocity_files = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_avg.??????????????.zarr';
 config const boundary_files = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
 config const forcing_files  = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
 
@@ -52,5 +45,11 @@ config const one_third = 1.0 / 3.0;
 config const v_sponge : real = 300;
 config const sponge_width : real = 15;
 
+// Horizontal viscosity
+config const grid_Pe : real = 10;
+
 // Order of polynomial for boundary value extrapolation
 config const ord : int = 3;
+
+// A really small number;
+config const eps : real = 1e-16;

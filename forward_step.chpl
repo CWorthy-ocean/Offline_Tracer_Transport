@@ -21,75 +21,81 @@ proc Explicit_TimeStep(step : int) {
   // Update in x-direction
 
     RHS_H_U(ktmp, U_n);
-    forall (k,j,i) in D3.localSubdomain() {
-      H_tilde[k,j,i] = H_n[k,j,i] + dt*ktmp[k,j,i];
+    forall (i,j,k) in D3.localSubdomain() {
+      H_tilde[i,j,k] = H_n[i,j,k] + dt*ktmp[i,j,k];
     }
 
-    calc_horizontal_fluxes_U(U_n, tmp_U_adv, tracer_n);
-    calc_diffusive_fluxes_U(tmp_U_diff, tracer_n, H_n);
+    for t in 1..num_tracers {
+      calc_horizontal_fluxes_U(U_n, tmp_U_adv, tracer_n, t);
+      calc_diffusive_fluxes_U(tmp_U_diff, tracer_n, H_n, t);
 
-    RHS_tr_U(ktmp, tmp_U_adv, tmp_U_diff);
+      RHS_tr_U(ktmp_tr, tmp_U_adv, tmp_U_diff);
 
-    forall (k,j,i) in D3.localSubdomain() {
-      tracer_tilde[k,j,i] =  (tracer_n[k,j,i]*H_n[k,j,i] + dt*ktmp[k,j,i]) / H_tilde[k,j,i];
+      forall (i,j,k) in D3.localSubdomain() {
+        tracer_tilde[t,i,j,k] =  (tracer_n[t,i,j,k]*H_n[i,j,k] + dt*ktmp_tr[i,j,k]) / H_tilde[i,j,k];
+      }
     }
+
     update_halos(tracer_tilde);
 
   // Update in y-direction
 
     RHS_H_V(ktmp, V_n);
-    forall (k,j,i) in D3.localSubdomain() {
-      H_dagger[k,j,i] = H_tilde[k,j,i] + dt*ktmp[k,j,i];
+    forall (i,j,k) in D3.localSubdomain() {
+      H_dagger[i,j,k] = H_tilde[i,j,k] + dt*ktmp[i,j,k];
     }
 
-    calc_horizontal_fluxes_V(V_n, tmp_V_adv, tracer_tilde);
-    calc_diffusive_fluxes_V(tmp_V_diff, tracer_tilde, H_tilde);
+    for t in 1..num_tracers {
+      calc_horizontal_fluxes_V(V_n, tmp_V_adv, tracer_tilde, t);
+      calc_diffusive_fluxes_V(tmp_V_diff, tracer_tilde, H_tilde, t);
 
-    RHS_tr_V(ktmp, tmp_V_adv, tmp_V_diff);
+      RHS_tr_V(ktmp_tr, tmp_V_adv, tmp_V_diff);
 
-    forall (k,j,i) in D3.localSubdomain() {
-      tracer_dagger[k,j,i] =  (tracer_tilde[k,j,i]*H_tilde[k,j,i] + dt*ktmp[k,j,i]) / H_dagger[k,j,i];
+      forall (i,j,k) in D3.localSubdomain() {
+        tracer_dagger[t,i,j,k] =  (tracer_tilde[t,i,j,k]*H_tilde[i,j,k] + dt*ktmp_tr[i,j,k]) / H_dagger[i,j,k];
+      }
     }
+
     allLocalesBarrier.barrier();
 
 }
 
 proc Implicit_TimeStep(step : int) {
 
-    calc_vertical_diffusion(tracer_dagger, H_dagger);
+  calc_vertical_diffusion(tracer_dagger, H_dagger);
 
 }
 
 proc RHS_H_U(ref tmp, ref U) {
 
-    forall (k,j,i) in D3.localSubdomain() {
-      tmp[k,j,i] = -iarea * (U[k,j,i] - U[k,j,i-1]);
-    }
+  forall (i,j,k) in D3.localSubdomain() {
+    tmp[i,j,k] = -iarea * (U[i,j,k] - U[i-1,j,k]);
+  }
 
 }
 
 proc RHS_H_V(ref tmp, ref V) {
 
-    forall (k,j,i) in D3.localSubdomain() {
-      tmp[k,j,i] = -iarea * (V[k,j,i] - V[k,j-1,i]);
-    }
-
-}
-
-proc RHS_tr_U(ref tmp, ref U, ref diff_U) {
-
-  forall (k,j,i) in D3.localSubdomain() {
-      tmp[k,j,i] = - iarea * (  (U[k,j,i] - U[k,j,i-1])
-                                  - (diff_U[k,j,i] - diff_U[k,j,i-1]) );
+  forall (i,j,k) in D3.localSubdomain() {
+    tmp[i,j,k] = -iarea * (V[i,j,k] - V[i,j-1,k]);
   }
 
 }
 
-proc RHS_tr_V(ref tmp, ref V, ref diff_V) {
+proc RHS_tr_U(ref tmp, ref adv_U, ref diff_U) {
 
-  forall (k,j,i) in D3.localSubdomain() {
-      tmp[k,j,i] = - iarea * (  (V[k,j,i] - V[k,j-1,i])
-                                  - (diff_V[k,j,i] - diff_V[k,j-1,i]) );
+  forall (i,j,k) in D3.localSubdomain() {
+    tmp[i,j,k] = - iarea * (  (adv_U[i,j,k] - adv_U[i-1,j,k])
+                            - (diff_U[i,j,k] - diff_U[i-1,j,k]) );
+  }
+
+}
+
+proc RHS_tr_V(ref tmp, ref adv_V, ref diff_V) {
+
+  forall (i,j,k) in D3.localSubdomain() {
+      tmp[i,j,k] = - iarea * (  (adv_V[i,j,k] - adv_V[i,j-1,k])
+                              - (diff_V[i,j,k] - diff_V[i,j-1,k]) );
   }
 
 }

@@ -4,36 +4,36 @@ use domains;
 use dynamics;
 use INPUTS;
 use tracers;
-
+use updates;
 
 // Apply Laplacian diffusion in the sponge layer near the domain boundary
 
-proc calc_diffusive_fluxes_U(ref U, ref arr, ref H) {
+proc calc_diffusive_fluxes_U(ref U, ref arr, ref H, const t) {
 
   /////////////////////////////////////////
   //             Zonal fluxes            //
   /////////////////////////////////////////
 
-  forall (k,j,i) in D3_u.localSubdomain() {
+  forall (i,j,k) in D3_u.localSubdomain() {
 
-    U[k,j,i] = 0.5*(visc[k,j,i] + visc[k,j,i+1]) * (arr[k,j,i+1] - arr[k,j,i])
-                         * dy * 0.5 * (H[k,j,i] + H[k,j,i+1]) / dx;
+    U[i,j,k] = 0.5*(visc[i,j,k] + visc[i+1,j,k]) * (arr[t,i+1,j,k] - arr[t,i,j,k])
+                         * dy * 0.5 * (H[i,j,k] + H[i+1,j,k]) / dx;
   }
 
   update_halos(U);
 
 }
 
-proc calc_diffusive_fluxes_V(ref V, ref arr, ref H) {
+proc calc_diffusive_fluxes_V(ref V, ref arr, ref H, const t) {
 
   /////////////////////////////////////////
   //         Meridional fluxes           //
   /////////////////////////////////////////
 
-  forall (k,j,i) in D3_v.localSubdomain() {
+  forall (i,j,k) in D3_v.localSubdomain() {
 
-    V[k,j,i] = 0.5*(visc[k,j,i] + visc[k,j+1,i]) * (arr[k,j+1,i] - arr[k,j,i])
-                         * dx * 0.5 * (H[k,j,i] + H[k,j+1,i]) / dy;
+    V[i,j,k] = 0.5*(visc[i,j,k] + visc[i,j+1,k]) * (arr[t,i,j+1,k] - arr[t,i,j,k])
+                         * dx * 0.5 * (H[i,j,k] + H[i,j+1,k]) / dy;
   }
 
   update_halos(V);
@@ -44,15 +44,16 @@ proc calc_diffusive_fluxes_V(ref V, ref arr, ref H) {
 
 proc initialize_sponge() {
 
-  coforall loc in Locales with (ref H_n) do on loc {
-    forall (k,j,i) in D3.localSubdomain() {
-      var dist_from_x = min(i, Nx - 1 - i);
-      var dist_from_y = min(j, Ny - 1 - j);
-      var min_dist = max(0.0, min(dist_from_x, dist_from_y) - 1);
-      var amp = max(0.0, (sponge_width - min_dist) / sponge_width);
-      bry_sponge[k,j,i] = v_sponge * amp;
-    }
+  forall (i,j,k) in D3.localSubdomain() {
+    var dist_from_x = min(Nx - 1 - i,i);
+    var dist_from_y = min(Ny - 1 - j,j);
+    var min_dist = max(0.0, min(dist_from_x, dist_from_y) - 1);
+    var amp = max(0.0, (sponge_width - min_dist) / sponge_width);
+    visc[i,j,k] = v_sponge * amp;
   }
+
+  update_halos(visc);
+
 }
 
 

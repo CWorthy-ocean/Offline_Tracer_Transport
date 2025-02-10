@@ -43,60 +43,60 @@ use dynamics;
 use INPUTS;
 use tracers;
 
-proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr) {
+proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
 
   /////////////////////////////////////////
   //              U-fluxes               //
   /////////////////////////////////////////
 
-  forall (k,j,i) in D3_u.localSubdomain() {
+  forall (i,j,k) in D3_u.localSubdomain() {
 
     // Slope ratio
-      var r = (arr[k,j,i] - arr[k,j,i-1]) / (arr[k,j,i+1] - arr[k,j,i] + eps);
+      var r = (arr[t,i,j,k] - arr[t,i-1,j,k]) / (arr[t,i+1,j,k] - arr[t,i,j,k] + eps);
 
     // Superbee limiter
       var sb = max(0, min(1, 2*r), min(r,2));
 
     // 3rd order, upstream-biased parabolic interpolation: SM05, after 4.13
-      var tmp_h = 0.5*(arr[k,j,i] + arr[k,j,i+1]) * U[k,j,i] - mask_rho[j,i+2]*
-                           (one_sixth * max(U[k,j,i], 0.0) * (arr[k,j,i+1] - arr[k,j,i])
-                           +  one_sixth * min(U[k,j,i], 0.0) * (arr[k,j,i+2] - 2*arr[k,j,i+1] + arr[k,j,i]));
+      var tmp_h = 0.5*(arr[t,i,j,k] + arr[t,i+1,j,k]) * U[i,j,k] - mask_rho[i+2,j]*
+                           (one_sixth * max(U[i,j,k], 0.0) * (arr[t,i+1,j,k] - arr[t,i,j,k])
+                           +  one_sixth * min(U[i,j,k], 0.0) * (arr[t,i+2,j,k] - 2*arr[t,i+1,j,k] + arr[t,i,j,k]));
     // 1st-order interpolation (constant in the cell)
-      var tmp_l = max(U[k,j,i], 0.0) * arr[k,j,i] + min(U[k,j,i], 0.0) * arr[k,j,i+1];
+      var tmp_l = max(U[i,j,k], 0.0) * arr[t,i,j,k] + min(U[i,j,k], 0.0) * arr[t,i+1,j,k];
 
     // Limited flux
-    tmp_U[k,j,i] = tmp_l + sb * (tmp_h - tmp_l);
-  }
+      tmp_U[i,j,k] = tmp_l + sb * (tmp_h - tmp_l);
 
+  }
   update_halos(tmp_U);
 
 }
 
-proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr) {
+proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
 
   /////////////////////////////////////////
   //              V-fluxes               //
   /////////////////////////////////////////
 
-  forall (k,j,i) in D3_v.localSubdomain() {
+  forall (i,j,k) in D3_v.localSubdomain() {
 
     // Slope ratio
-      var r = (arr[k,j,i] - arr[k,j-1,i]) / (arr[k,j+1,i] - arr[k,j,i] + eps);
+      var r = (arr[t,i,j,k] - arr[t,i,j-1,k]) / (arr[t,i,j+1,k] - arr[t,i,j,k] + eps);
 
     // Superbee limiter
       var sb = max(0, min(1, 2*r), min(r,2));
 
     // 3rd order, upstream-biased parabolic interpolation: SM05, after 4.13
-      var tmp_h = 0.5*(arr[k,j,i] + arr[k,j+1,i]) * V[k,j,i] - mask_rho[j+2,i]*
-                           (one_sixth * max(V[k,j,i], 0.0) * (arr[k,j+1,i] - arr[k,j,i])
-                           +  one_sixth * min(V[k,j,i], 0.0) * (arr[k,j+2,i] - 2*arr[k,j+1,i] + arr[k,j,i]));
+      var tmp_h = 0.5*(arr[t,i,j,k] + arr[t,i,j+1,k]) * V[i,j,k] - mask_rho[i,j+2]*
+                           (one_sixth * max(V[i,j,k], 0.0) * (arr[t,i,j+1,k] - arr[t,i,j,k])
+                           +  one_sixth * min(V[i,j,k], 0.0) * (arr[t,i,j+2,k] - 2*arr[t,i,j+1,k] + arr[t,i,j,k]));
     // 1st-order interpolation (constant in the cell)
-      var tmp_l = max(V[k,j,i], 0.0) * arr[k,j,i] + min(V[k,j,i], 0.0) * arr[k,j+1,i];
+      var tmp_l = max(V[i,j,k], 0.0) * arr[t,i,j,k] + min(V[i,j,k], 0.0) * arr[t,i,j+1,k];
 
     // Limited flux
-    tmp_V[k,j,i] = tmp_l + sb * (tmp_h - tmp_l);
-  }
+      tmp_V[i,j,k] = tmp_l + sb * (tmp_h - tmp_l);
 
+  }
   update_halos(tmp_V);
 
 }

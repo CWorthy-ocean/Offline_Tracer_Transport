@@ -22,15 +22,15 @@ proc get_H0(ref h: [?D] real) {
 
   var Cs_w = Cs(sigma_w);
 
-  var z_w : [0..Nz, D.dim[0], D.dim[1]] real;
-  var H0 : [0..<Nz, D.dim[0], D.dim[1]] real;
+  var z_w : [D.dim[0], D.dim[1], 0..Nz] real;
+  var H0 : [D.dim[0], D.dim[1], 0..<Nz] real;
 
-  forall (k,j,i) in z_w.domain {
-    z_w[k,j,i] = h[j,i] * (hc*sigma_w[k] + h[j,i]*Cs_w[k]) / (hc + h[j,i]);
+  forall (i,j,k) in z_w.domain {
+    z_w[i,j,k] = h[i,j] * (hc*sigma_w[k] + h[i,j]*Cs_w[k]) / (hc + h[i,j]);
   }
 
-  forall (k,j,i) in H0.domain {
-    H0[k,j,i] = z_w[k+1,j,i] - z_w[k,j,i];
+  forall (i,j,k) in H0.domain {
+    H0[i,j,k] = z_w[i,j,k+1] - z_w[i,j,k];
   }
 
   return H0;

@@ -9,16 +9,13 @@ proc calc_vertical_diffusion(ref arr, ref H) {
 
   // This will update tracer_dagger with an implicit timestep for the vertical diffusion
 
-  var Dp : domain(1) = {0..Nz};
-  var DpDp : domain(2) = {0..Nz, 0..Nz};
+  var D3_loc = D3_tr.localSubdomain();
+  forall (t,i,j) in {D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]} {
 
-  var D3_loc = D3.localSubdomain();
-  forall (j,i) in {D3_loc.dim[1], D3_loc.dim[2]} {
-
-    var tmmp = thomas_diff(j,i, arr, H);
+    var tmmp = thomas_diff(t,i,j, arr, H);
 
     for kk in 0..<Nz {
-      arr[kk,j,i] = tmmp[kk+1];
+      arr[t,i,j,kk] = tmmp[kk+1];
     }
   }
 
@@ -26,52 +23,53 @@ proc calc_vertical_diffusion(ref arr, ref H) {
 
 }
 
-proc thomas_diff(j, i, ref arr, ref H) {
+proc thomas_diff(t, i, j, ref arr, ref H) {
 
-    var n = Nz;
-    var Dp : domain(1) = {1..n};
+  var n = Nz;
+  var Dp : domain(1) = {1..n};
 
-    var a : [Dp] real;
-    var b : [Dp] real;
-    var c : [Dp] real;
-    var d : [Dp] real;
+  var a : [Dp] real;
+  var b : [Dp] real;
+  var c : [Dp] real;
+  var d : [Dp] real;
 
-    var cp : [Dp] real;
-    var dp : [Dp] real;
-    var x  : [Dp] real;
+  var cp : [Dp] real;
+  var dp : [Dp] real;
+  var x  : [Dp] real;
 
-    a[1] = 0;
-    c[1] = -(2*dt*kappa_v[1,j,i]) / (H[0,j,i] * (H[1,j,i]+H[0,j,i]));
-    b[1] = 1 - a[1] - c[1];
-    d[1] = arr[0,j,i];
+  a[1] = 0;
+  c[1] = -(2*dt*kappa_v[i,j,1]) / (H[i,j,0] * (H[i,j,1]+H[i,j,0]));
+  b[1] = 1 - a[1] - c[1];
+  d[1] = arr[t,i,j,0];
 
-    a[n] = -(2*dt*kappa_v[n-1,j,i]) / (H[n-1,j,i] * (H[n-1,j,i]+H[n-2,j,i]));
-    c[n] = 0;
-    b[n] = 1 - a[n] - c[n];
-    d[n] = arr[n-1,j,i];
+  a[n] = -(2*dt*kappa_v[i,j,n-1]) / (H[i,j,n-1] * (H[i,j,n-1]+H[i,j,n-2]));
+  c[n] = 0;
+  b[n] = 1 - a[n] - c[n];
+  d[n] = arr[t,i,j,n-1];
 
-    for k in 2..<n {
-      a[k] = -(2*dt*kappa_v[k-1,j,i]) / (H[k-1,j,i] * (H[k-1,j,i]+H[k-2,j,i]));
-      c[k] = -(2*dt*kappa_v[k,j,i]) / (H[k-1,j,i] * (H[k,j,i]+H[k-1,j,i]));
-      b[k] = 1 - a[k] - c[k];
+  for k in 2..<n {
+    a[k] = -(2*dt*kappa_v[i,j,k-1]) / (H[i,j,k-1] * (H[i,j,k-1]+H[i,j,k-2]));
+    c[k] = -(2*dt*kappa_v[i,j,k]) / (H[i,j,k-1] * (H[i,j,k]+H[i,j,k-1]));
+    b[k] = 1 - a[k] - c[k];
 
-      d[k] = arr[k-1,j,i];
-    }
+    d[k] = arr[t,i,j,k-1];
+  }
 
-    cp[1] = c[1] / b[1];
-    dp[1] = d[1] / b[1];
+  cp[1] = c[1] / b[1];
+  dp[1] = d[1] / b[1];
 
-    for k in 2..(n-1) {
-      cp[k] = c[k] / (b[k] - a[k]*cp[k-1]);
-      dp[k] = (d[k] - a[k]*dp[k-1]) / (b[k] - a[k]*cp[k-1]);
-    }
+  for k in 2..(n-1) {
+    cp[k] = c[k] / (b[k] - a[k]*cp[k-1]);
+    dp[k] = (d[k] - a[k]*dp[k-1]) / (b[k] - a[k]*cp[k-1]);
+  }
 
-    dp[n] = (d[n] - a[n]*dp[n-1]) / (b[n] - a[n]*cp[n-1]);
+  dp[n] = (d[n] - a[n]*dp[n-1]) / (b[n] - a[n]*cp[n-1]);
 
-    x[n] = dp[n];
-    for k in 1..(n-1) by -1 {
-      x[k] = dp[k] - cp[k]*x[k+1];
-    }
+  x[n] = dp[n];
+  for k in 1..(n-1) by -1 {
+    x[k] = dp[k] - cp[k]*x[k+1];
+  }
 
-    return x;
+  return x;
+
 }

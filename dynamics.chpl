@@ -20,18 +20,18 @@ use updates;
 
 proc calc_volumetric_fluxes(ref u, ref v, ref U, ref V, ref H) {
 
-    forall (k,j,i) in D3_u.localSubdomain() {
-      U[k,j,i] = u[k,j,i] * 0.5 * (H[k,j,i] + H[k,j,i+1]) * dy;
-    }
+  forall (i,j,k) in D3_u.localSubdomain() {
+    U[i,j,k] = u[i,j,k] * 0.5 * (H[i,j,k] + H[i+1,j,k]) * dy;
+  }
 
-    forall (k,j,i) in D3_v.localSubdomain() {
-      V[k,j,i] = v[k,j,i] * 0.5 * (H[k,j,i] + H[k,j+1,i]) * dx;
-    }
+  forall (i,j,k) in D3_v.localSubdomain() {
+    V[i,j,k] = v[i,j,k] * 0.5 * (H[i,j,k] + H[i,j+1,k]) * dx;
+  }
 
-    allLocalesBarrier.barrier();
+  allLocalesBarrier.barrier();
 
-    update_halos(U);
-    update_halos(V);
+  update_halos(U);
+  update_halos(V);
 
 }
 

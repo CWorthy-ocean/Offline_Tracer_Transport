@@ -14,10 +14,11 @@ use FileSystem;
 
 // For RK3
   var ktmp : [D3] real;
+  var ktmp_tr : [D3] real;
 
-  var tracer_n : [D3] real;
-  var tracer_tilde : [D3] real;
-  var tracer_dagger : [D3] real;
+  var tracer_n : [D3_tr] real;
+  var tracer_tilde : [D3_tr] real;
+  var tracer_dagger : [D3_tr] real;
 
   var mask_rho : [D2] real;
   var h : [D2] real;
@@ -30,7 +31,6 @@ use FileSystem;
   var zeta_n : [D2] real;
   var zeta_np1 : [D2] real;
 
-  var bry_sponge : [D3] real;
   var visc : [D3] real;
 
   var kappa_v : [D3] real;
@@ -40,28 +40,37 @@ use FileSystem;
 
 proc initialize_tr() {
 
-    mask_rho = readZarrArray(maskfile, real(64), 2, targetLocales=myTargetLocales2D);
-    h = readZarrArray(hfile, real(64), 2, targetLocales=myTargetLocales2D);
+  var D3_loc = D3.localSubdomain();
+  var D2_loc = D2.localSubdomain();
 
-    coforall loc in Locales do on loc {
-      var D2_loc = D2.localSubdomain();
-      var D3_loc = D3.localSubdomain();
-      H0[D3_loc] = get_H0(h[D2_loc]);
+  get_var(maskfile, "mask_rho", mask_rho, D2);
+  get_var(hfile, "h", h, D2);
+
+  H0[D3_loc] = get_H0(h[D2_loc]);
+
+//  get_var(velfiles[Nt_start], 'Akt', kappa_v, D3);
+
+  if (restart == 1) {
+    for t in 1..num_tracers {
+      get_var(restart_file, 'tracer', ktmp, D3);
+      tracer_n[t,D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]] = ktmp[D3_loc];
     }
-
-    kappa_v = readZarrArray(velfiles[Nt_start] + '/Akt/', real(32), 3, targetLocales=myTargetLocales3D);
-
-    // Initialize tracer fields
-    tracer_n = readZarrArray(velfiles[Nt_start] + '/temp/', real(32), 3, targetLocales=myTargetLocales3D);
-
-    // Initialize zeta and thicknesses
-      update_thickness(zeta_n, H_n, H0, h, Nt_start);
-
-    // Update the halos
-    coforall loc in Locales do on loc {
-      update_halos(mask_rho);
-      update_halos(h);
-      update_halos(H0);
-      update_halos(tracer_n);
+  }
+  else {
+    for t in 1..num_tracers {
+      get_var(velfiles[Nt_start], 'dye', ktmp, D3);
+      tracer_n[t,D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]] = ktmp[D3_loc];
     }
+  }
+
+  // Initialize zeta and thicknesses
+    update_thickness(zeta_n, H_n, H0, h, Nt_start);
+
+  // Update the halos
+    update_halos(mask_rho);
+    update_halos(h);
+    update_halos(H0);
+    update_halos(kappa_v);
+    update_halos(tracer_n);
+
 }

@@ -13,22 +13,25 @@ use tracers;
 proc Polyfit() {
 
   var D3_loc = D3.localSubdomain();
-  forall (j,i) in {D3_loc.dim[1], D3_loc.dim[2]} {
+  forall (i,j) in {D3_loc.dim[0], D3_loc.dim[1]} {
 
-  if (mask_rho[j,i] == 1) {
+  if (mask_rho[i,j] == 1) {
 
-    var interface_values = calc_interface_values(j, i, tracer_dagger, H_dagger);
+    var interface_values : [1..num_tracers,0..Nz] real;
+
+    interface_values = calc_interface_values(i, j, tracer_dagger, H_dagger);
 
     // Create the coefficients for the polynomial in each cell
     // Going to treat "left" as equivalent to "bottom", and "right" as equivalent to "top"
 
-    var a0 : [0..<Nz] real;
-    var a1 : [0..<Nz] real;
-    var a2 : [0..<Nz] real;
-    for k in 0..<Nz {
-      a0[k] = interface_values[k];
-      a1[k] = 6*tracer_dagger[k,j,i] - 4*interface_values[k] - 2*interface_values[k+1];
-      a2[k] = 3*(interface_values[k] + interface_values[k+1] - 2*tracer_dagger[k,j,i]);
+    var a0 : [1..num_tracers,0..<Nz] real;
+    var a1 : [1..num_tracers,0..<Nz] real;
+    var a2 : [1..num_tracers,0..<Nz] real;
+
+    for (t,k) in {1..num_tracers,0..<Nz} {
+      a0[t,k] = interface_values[t,k];
+      a1[t,k] = 6*tracer_dagger[t,i,j,k] - 4*interface_values[t,k] - 2*interface_values[t,k+1];
+      a2[t,k] = 3*(interface_values[t,k] + interface_values[t,k+1] - 2*tracer_dagger[t,i,j,k]);
     }
 
     // These are vector copies of each column.  H_orig is going to have one extra layer
@@ -37,8 +40,8 @@ proc Polyfit() {
       var H_orig : [0..<Nz] real;
       var H_new  : [0..<Nz] real;
       for kk in 0..<Nz {
-        H_orig[kk] = H_dagger[kk,j,i];
-        H_new[kk]  = H_np1[kk,j,i];
+        H_orig[kk] = H_dagger[i,j,kk];
+        H_new[kk]  = H_np1[i,j,kk];
       }
 
     // Going to normalize the thicknesses to make the forthcoming loop logic and
@@ -59,44 +62,45 @@ proc Polyfit() {
       var z1 : real = 1;
 
     // This holds the reconstruction
-    var reconstruction : [0..<Nz] real;
+      var reconstruction : [1..num_tracers, 0..<Nz] real;
 
-    var tol = 1e-5;
+      var tol = 1e-5;
 
     // Going to overwrite tracer_n with the interpolated values
-    label ko for k_new in 0..<Nz {
-      curr_H_new = H_new[k_new];
+      label ko for k_new in 0..<Nz {
+        curr_H_new = H_new[k_new];
 
-      while (k_orig < Nz) {
+        while (k_orig < Nz) {
 
-        while (curr_H_new >= tol) {
+          while (curr_H_new >= tol) {
 
-          curr_H_orig = H_orig[k_orig];
+            curr_H_orig = H_orig[k_orig];
 
-          z1 = min(1, z0 + curr_H_new / curr_H_orig);
-          var tmp = integrate(a0[k_orig], a1[k_orig], a2[k_orig], z0, z1);
-          var frac = (z1 - z0) * curr_H_orig / H_new[k_new];
+            z1 = min(1, z0 + curr_H_new / curr_H_orig);
+            var frac = (z1 - z0) * curr_H_orig / H_new[k_new];
+            for t in 1..num_tracers {
+              var tmp = integrate(a0[t,k_orig], a1[t,k_orig], a2[t,k_orig], z0, z1);
+              reconstruction[t,k_new] = reconstruction[t,k_new] + frac*tmp;
+            }
+            curr_H_new = max(0, curr_H_new - (z1-z0)*curr_H_orig);
+            z0 = 0;
+            // Increment k_orig only if z1 = 1
+            k_orig += (floor(z1) : int);
 
-          reconstruction[k_new] = reconstruction[k_new] + frac*tmp;
-          curr_H_new = max(0, curr_H_new - (z1-z0)*curr_H_orig);
-          z0 = 0;
-          // Increment k_orig only if z1 = 1
-          k_orig += (floor(z1) : int);
+          }
+          // This will ensure z0 = 0 if z1 = 1; otherwise if z1<1 then z0=z1
+          z0 = z1 - floor(z1);
+
+          continue ko;
 
         }
-        // This will ensure z0 = 0 if z1 = 1; otherwise if z1<1 then z0=z1
-        z0 = z1 - floor(z1);
-
-        continue ko;
-
       }
-    }
 
-    for kk in 0..<Nz {
-      tracer_n[kk,j,i] = reconstruction[kk];
-    }
+      for (t,kk) in {1..num_tracers,0..<Nz} {
+        tracer_n[t,i,j,kk] = reconstruction[t,kk];
+      }
 
-  } // mask_rho
+    } // mask_rho
 
   } // end of forall
 
@@ -113,7 +117,7 @@ proc integrate(a0, a1, a2, z0, z1) {
   return mean_of_integral;
 }
 
-proc calc_interface_values(j, i, ref arr, ref H) {
+proc calc_interface_values(i, j, ref arr, ref H) {
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //                                     Get tracer values at layer interfaces                               //
@@ -123,18 +127,21 @@ proc calc_interface_values(j, i, ref arr, ref H) {
   // First get the tracer values at the top and bottom boundaries using conservative
   // piecewise polynomial reconstruction: White and Adcroft, 2008, Eq. 7
 
-  var Dp : domain(1) = {0..Nz};
-  var DpDp : domain(2) = {0..Nz, 0..Nz};
+    var Dp : domain(1) = {0..Nz};
+    var DpDp : domain(2) = {0..Nz, 0..Nz};
 
-    // Bottom boundary extrapolation
-    // Calculated using a polynomial of order "ord" over the bottom (ord+1) cells
+  // Bottom boundary extrapolation
+  // Calculated using a polynomial of order "ord" over the bottom (ord+1) cells
 
-    var B : [0..ord] real;
+    var B : [1..num_tracers,0..ord] real;
     var M : [0..ord,0..ord] real;
 
     var h_b : real = 0;
-    var h_t : real = H[0,j,i];
+    var h_t : real = H[i,j,0];
     var iH = 1.0 / (h_t - h_b);
+
+    var Ts_bot : [1..num_tracers] real;
+    var Ts_top : [1..num_tracers] real;
 
     for k in 0..ord {
       for kk in 0..ord {
@@ -142,18 +149,22 @@ proc calc_interface_values(j, i, ref arr, ref H) {
         M[k,kk] = (1.0 / kkp1)*iH*(h_t**(kkp1) - h_b**(kkp1));
       }
 
-      B[k] = arr[k,j,i];
-
-      h_b = h_b + H[k,j,i];
-      h_t = h_t + H[k+1,j,i];
+      h_b = h_b + H[i,j,k];
+      h_t = h_t + H[i,j,k+1];
       iH = 1.0/(h_t - h_b);
+
+      for t in 1..num_tracers {
+        B[t,k] = arr[t,i,j,k];
+      }
     }
 
-    var Ts_bot = gauss(M,B);
+    for t in 1..num_tracers {
+      Ts_bot[t] = gauss(M, B[t,..]);
+    }
 
     // Top boundary extrapolation
     h_b = 0;
-    h_t = H[Nz-1,j,i];
+    h_t = H[i,j,Nz-1];
     iH = 1.0/(h_t - h_b);
     for k in 0..ord {
       for kk in 0..ord {
@@ -161,18 +172,25 @@ proc calc_interface_values(j, i, ref arr, ref H) {
         M[k,kk] = (1.0 / kkp1)*iH*(h_t**kkp1 - h_b**kkp1);
       }
 
-      B[k] = arr[Nz-1-k,j,i];
-
-      h_b = h_b + H[Nz-1-k,j,i];
-      h_t = h_t + H[Nz-2-k,j,i];
+      h_b = h_b + H[i,j,Nz-1-k];
+      h_t = h_t + H[i,j,Nz-2-k];
       iH = 1.0/(h_t - h_b);
+
+      for t in 1..num_tracers {
+        B[t,k] = arr[t,i,j,Nz-1-k];
+      }
     }
 
-    var Ts_top = gauss(M,B);
+    for t in 1..num_tracers {
+      Ts_top[t] = gauss(M, B[t,..]);
+    }
 
     /////////////////////////////
 
-    var interface_values : [0..Nz] real = thomas_PPM(j,i,Ts_bot, Ts_top, arr, H);
+    var interface_values : [1..num_tracers,0..Nz] real;
+    for t in 1..num_tracers {
+      interface_values[t,..] = thomas_PPM(t,i,j,Ts_bot, Ts_top, arr, H);
+    }
 
   return interface_values;
 
@@ -204,7 +222,7 @@ proc gauss(ref M, ref b) {
 
 }
 
-proc thomas_PPM(j, i, Ts_bot, Ts_top, ref arr, ref H) {
+proc thomas_PPM(t, i, j, Ts_bot, Ts_top, ref arr, ref H) {
 
   //////////////////////////////////////////////////////////////////////////////////////
   //                   Get tracer values at layer interfaces                          //
@@ -225,12 +243,12 @@ proc thomas_PPM(j, i, Ts_bot, Ts_top, ref arr, ref H) {
 
     b[1] = 1.0;
     b[n] = 1.0;
-    d[1] = Ts_bot;
-    d[n] = Ts_top;
+    d[1] = Ts_bot[t];
+    d[n] = Ts_top[t];
 
     for k in 1..(n-2) {
-      var h0 = H[k-1,j,i];
-      var h1 = H[k,j,i];
+      var h0 = H[i,j,k-1];
+      var h1 = H[i,j,k];
 
       var alpha = (h1**2) / ((h0 + h1)**2);
       var beta = (h0**2) / ((h0 + h1)**2);
@@ -241,7 +259,7 @@ proc thomas_PPM(j, i, Ts_bot, Ts_top, ref arr, ref H) {
       b[k+1] = 1.0;
       c[k+1] = beta;
 
-      d[k+1] = d1*arr[k-1,j,i] + d2*arr[k,j,i];
+      d[k+1] = d1*arr[t,i,j,k-1] + d2*arr[t,i,j,k];
     }
 
     cp[1] = c[1] / b[1];

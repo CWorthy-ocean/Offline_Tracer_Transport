@@ -2,15 +2,26 @@ use FileSystem;
 
 /* INPUT PARAMETERS */
 
-config const maskfile       = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/mask/';
-config const hfile          = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/h/';
-config const velocity_files = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_avg.??????????????.zarr';
-config const boundary_files = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
+//config const maskfile       = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/mask/';
+//config const hfile          = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/h/';
+//config const velocity_files = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_avg.??????????????.zarr';
+
+config const maskfile = '/glade/derecho/scratch/bachman/UCLA-ROMS/Work/Iceland1/INPUT/Iceland1_grd.nc_perm';
+config const hfile = '/glade/derecho/scratch/bachman/UCLA-ROMS/Work/Iceland1/INPUT/Iceland1_grd.nc_perm';
+config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/Iceland1/run/OUTPUT/DYE/dye_rnd.??????????????.nc??_perm';
+config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/Iceland1/run/OUTPUT/DYE/dye_bry.??????????????.nc??_perm';
 config const forcing_files  = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
 
+const num_tracers = 1;
 config const Nx = 66;
 config const Ny = 34;
 config const Nz = 100;
+
+/* Restart? */
+config const restart = 0;
+config const restart_file = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/tracer.0000003510.nc';
+config const Nt_start : int = 0;
+config const Nt : int = 100;
 
 /* Sigma coordinate parameters */
 config const theta_s : real = 5.0;
@@ -23,10 +34,6 @@ const area = dx * dy;
 const iarea = 1.0 / area;
 
 config const dt : real = 60.0;
-
-/* Timestepping */  // do these need to be config vars?
-config const Nt_start : int = 0;
-config const Nt : int = 100;
 
 // For LF-AM3 scheme
 config const gamma = 0.0833333333333;
@@ -53,3 +60,6 @@ config const ord : int = 3;
 
 // A really small number;
 config const eps : real = 1e-16;
+
+// Output frequency (in timesteps);
+config const output_freq : int = 6;

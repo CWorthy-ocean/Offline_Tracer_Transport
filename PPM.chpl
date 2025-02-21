@@ -12,7 +12,7 @@ use tracers;
 
 proc Polyfit() {
 
-  var D3_loc = D3.localSubdomain();
+  var D3_loc = D3_int_3D.localSubdomain();
   forall (i,j) in {D3_loc.dim[0], D3_loc.dim[1]} {
 
   if (mask_rho[i,j] == 1) {

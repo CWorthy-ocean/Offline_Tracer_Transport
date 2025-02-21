@@ -49,7 +49,7 @@ proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
   //              U-fluxes               //
   /////////////////////////////////////////
 
-  forall (i,j,k) in D3_u.localSubdomain() {
+  forall (i,j,k) in D3_int_u.localSubdomain() {
 
     // Slope ratio
       var r = (arr[t,i,j,k] - arr[t,i-1,j,k]) / (arr[t,i+1,j,k] - arr[t,i,j,k] + eps);
@@ -59,7 +59,7 @@ proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
 
     // 3rd order, upstream-biased parabolic interpolation: SM05, after 4.13
       var tmp_h = 0.5*(arr[t,i,j,k] + arr[t,i+1,j,k]) * U[i,j,k] - mask_rho[i+2,j]*
-                           (one_sixth * max(U[i,j,k], 0.0) * (arr[t,i+1,j,k] - arr[t,i,j,k])
+                           (one_sixth * max(U[i,j,k], 0.0) * (arr[t,i+1,j,k] - 2*arr[t,i,j,k] + arr[t,i-1,j,k])
                            +  one_sixth * min(U[i,j,k], 0.0) * (arr[t,i+2,j,k] - 2*arr[t,i+1,j,k] + arr[t,i,j,k]));
     // 1st-order interpolation (constant in the cell)
       var tmp_l = max(U[i,j,k], 0.0) * arr[t,i,j,k] + min(U[i,j,k], 0.0) * arr[t,i+1,j,k];
@@ -68,6 +68,27 @@ proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
       tmp_U[i,j,k] = tmp_l + sb * (tmp_h - tmp_l);
 
   }
+
+  forall (i,j,k) in D3_edge_u_w.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(U[i,j,k], 0.0) * arr[t,i,j,k] + min(U[i,j,k], 0.0) * arr[t,i+1,j,k];
+
+    // Limited flux
+      tmp_U[i,j,k] = tmp_l;
+
+  }
+
+  forall (i,j,k) in D3_edge_u_e.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(U[i,j,k], 0.0) * arr[t,i,j,k] + min(U[i,j,k], 0.0) * arr[t,i+1,j,k];
+
+    // Limited flux
+      tmp_U[i,j,k] = tmp_l;
+
+  }
+
   update_halos(tmp_U);
 
 }
@@ -78,9 +99,7 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
   //              V-fluxes               //
   /////////////////////////////////////////
 
-//  forall (i,j,k) in D3_v.localSubdomain() {
-  var D3_loc = D3.localSubdomain();
-  forall (i,j,k) in {D3_loc.dim[0], 1..(D3_loc.last[1]-2), D3_loc.dim[2]} {
+  forall (i,j,k) in D3_int_v.localSubdomain() {
 
     // Slope ratio
       var r = (arr[t,i,j,k] - arr[t,i,j-1,k]) / (arr[t,i,j+1,k] - arr[t,i,j,k] + eps);
@@ -90,7 +109,7 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
 
     // 3rd order, upstream-biased parabolic interpolation: SM05, after 4.13
       var tmp_h = 0.5*(arr[t,i,j,k] + arr[t,i,j+1,k]) * V[i,j,k] - mask_rho[i,j+2]*
-                           (one_sixth * max(V[i,j,k], 0.0) * (arr[t,i,j+1,k] - arr[t,i,j,k])
+                           (one_sixth * max(V[i,j,k], 0.0) * (arr[t,i,j+1,k] - 2*arr[t,i,j,k] + arr[t,i,j-1,k])
                            +  one_sixth * min(V[i,j,k], 0.0) * (arr[t,i,j+2,k] - 2*arr[t,i,j+1,k] + arr[t,i,j,k]));
     // 1st-order interpolation (constant in the cell)
       var tmp_l = max(V[i,j,k], 0.0) * arr[t,i,j,k] + min(V[i,j,k], 0.0) * arr[t,i,j+1,k];
@@ -99,6 +118,27 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
       tmp_V[i,j,k] = tmp_l + sb * (tmp_h - tmp_l);
 
   }
+
+  forall (i,j,k) in D3_edge_v_s.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(V[i,j,k], 0.0) * arr[t,i,j,k] + min(V[i,j,k], 0.0) * arr[t,i,j+1,k];
+
+    // Limited flux
+      tmp_V[i,j,k] = tmp_l;
+
+  }
+
+  forall (i,j,k) in D3_edge_v_n.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(V[i,j,k], 0.0) * arr[t,i,j,k] + min(V[i,j,k], 0.0) * arr[t,i,j+1,k];
+
+    // Limited flux
+      tmp_V[i,j,k] = tmp_l;
+
+  }
+
   update_halos(tmp_V);
 
 }

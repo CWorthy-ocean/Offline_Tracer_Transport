@@ -9,7 +9,7 @@ proc calc_vertical_diffusion(ref arr, ref H) {
 
   // This will update tracer_dagger with an implicit timestep for the vertical diffusion
 
-  var D3_loc = D3_tr.localSubdomain();
+  var D3_loc = D3_int_tr.localSubdomain();
   forall (t,i,j) in {D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]} {
 
     var tmmp = thomas_diff(t,i,j, arr, H);

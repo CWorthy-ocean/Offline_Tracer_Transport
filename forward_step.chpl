@@ -21,7 +21,8 @@ proc Explicit_TimeStep(step : int) {
   // Update in x-direction
 
     RHS_H_U(ktmp, U_n);
-    forall (i,j,k) in D3.localSubdomain() {
+
+    forall (i,j,k) in D3_int_3D.localSubdomain() {
       H_tilde[i,j,k] = H_n[i,j,k] + dt*ktmp[i,j,k];
     }
 
@@ -31,7 +32,7 @@ proc Explicit_TimeStep(step : int) {
 
       RHS_tr_U(ktmp_tr, tmp_U_adv, tmp_U_diff);
 
-      forall (i,j,k) in D3.localSubdomain() {
+      forall (i,j,k) in D3_int_3D.localSubdomain() {
         tracer_tilde[t,i,j,k] =  (tracer_n[t,i,j,k]*H_n[i,j,k] + dt*ktmp_tr[i,j,k]) / H_tilde[i,j,k];
       }
     }
@@ -41,7 +42,7 @@ proc Explicit_TimeStep(step : int) {
   // Update in y-direction
 
     RHS_H_V(ktmp, V_n);
-    forall (i,j,k) in D3.localSubdomain() {
+    forall (i,j,k) in D3_int_3D.localSubdomain() {
       H_dagger[i,j,k] = H_tilde[i,j,k] + dt*ktmp[i,j,k];
     }
 
@@ -51,7 +52,7 @@ proc Explicit_TimeStep(step : int) {
 
       RHS_tr_V(ktmp_tr, tmp_V_adv, tmp_V_diff);
 
-      forall (i,j,k) in D3.localSubdomain() {
+      forall (i,j,k) in D3_int_3D.localSubdomain() {
         tracer_dagger[t,i,j,k] =  (tracer_tilde[t,i,j,k]*H_tilde[i,j,k] + dt*ktmp_tr[i,j,k]) / H_dagger[i,j,k];
       }
     }
@@ -68,7 +69,7 @@ proc Implicit_TimeStep(step : int) {
 
 proc RHS_H_U(ref tmp, ref U) {
 
-  forall (i,j,k) in D3.localSubdomain() {
+  forall (i,j,k) in D3_int_3D.localSubdomain() {
     tmp[i,j,k] = -iarea * (U[i,j,k] - U[i-1,j,k]);
   }
 
@@ -76,8 +77,7 @@ proc RHS_H_U(ref tmp, ref U) {
 
 proc RHS_H_V(ref tmp, ref V) {
 
-  var D3_loc = D3.localSubdomain();
-  forall (i,j,k) in {D3_loc.dim[0], 1..(D3_loc.last[1]-1), D3_loc.dim[2]} {
+  forall (i,j,k) in D3_int_3D.localSubdomain() {
     tmp[i,j,k] = -iarea * (V[i,j,k] - V[i,j-1,k]);
   }
 
@@ -85,7 +85,7 @@ proc RHS_H_V(ref tmp, ref V) {
 
 proc RHS_tr_U(ref tmp, ref adv_U, ref diff_U) {
 
-  forall (i,j,k) in D3.localSubdomain() {
+  forall (i,j,k) in D3_int_3D.localSubdomain() {
     tmp[i,j,k] = - iarea * (  (adv_U[i,j,k] - adv_U[i-1,j,k])
                             - (diff_U[i,j,k] - diff_U[i-1,j,k]) );
   }
@@ -94,9 +94,7 @@ proc RHS_tr_U(ref tmp, ref adv_U, ref diff_U) {
 
 proc RHS_tr_V(ref tmp, ref adv_V, ref diff_V) {
 
-//  forall (i,j,k) in D3.localSubdomain() {
-  var D3_loc = D3.localSubdomain();
-  forall (i,j,k) in {D3_loc.dim[0], 1..(D3_loc.last[1]-1), D3_loc.dim[2]} {
+  forall (i,j,k) in D3_int_3D.localSubdomain() {
       tmp[i,j,k] = - iarea * (  (adv_V[i,j,k] - adv_V[i,j-1,k])
                               - (diff_V[i,j,k] - diff_V[i,j-1,k]) );
   }

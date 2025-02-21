@@ -14,6 +14,10 @@ proc prepare_to_timestep(step : int) {
     get_var(velfiles[step], 'u', u_n, D3_u);
     get_var(velfiles[step], 'v', v_n, D3_v);
 
+  // Load viscosity for this timestep
+    get_var(velfiles[step], 'Aks', kappa_v, D3);
+    update_halos(kappa_v);
+
   calc_volumetric_fluxes(u_n, v_n, U_n, V_n, H_n);
 
   // Load thickness for future timestep (used for vertical remapping)

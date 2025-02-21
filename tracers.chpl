@@ -48,7 +48,6 @@ proc initialize_tr() {
 
   H0[D3_loc] = get_H0(h[D2_loc]);
 
-//  get_var(velfiles[Nt_start], 'Akt', kappa_v, D3);
 
   if (restart == 1) {
     for t in 1..num_tracers {
@@ -70,7 +69,6 @@ proc initialize_tr() {
     update_halos(mask_rho);
     update_halos(h);
     update_halos(H0);
-    update_halos(kappa_v);
     update_halos(tracer_n);
 
 }

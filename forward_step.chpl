@@ -76,7 +76,8 @@ proc RHS_H_U(ref tmp, ref U) {
 
 proc RHS_H_V(ref tmp, ref V) {
 
-  forall (i,j,k) in D3.localSubdomain() {
+  var D3_loc = D3.localSubdomain();
+  forall (i,j,k) in {D3_loc.dim[0], 1..(D3_loc.last[1]-1), D3_loc.dim[2]} {
     tmp[i,j,k] = -iarea * (V[i,j,k] - V[i,j-1,k]);
   }
 
@@ -93,7 +94,9 @@ proc RHS_tr_U(ref tmp, ref adv_U, ref diff_U) {
 
 proc RHS_tr_V(ref tmp, ref adv_V, ref diff_V) {
 
-  forall (i,j,k) in D3.localSubdomain() {
+//  forall (i,j,k) in D3.localSubdomain() {
+  var D3_loc = D3.localSubdomain();
+  forall (i,j,k) in {D3_loc.dim[0], 1..(D3_loc.last[1]-1), D3_loc.dim[2]} {
       tmp[i,j,k] = - iarea * (  (adv_V[i,j,k] - adv_V[i,j-1,k])
                               - (diff_V[i,j,k] - diff_V[i,j-1,k]) );
   }

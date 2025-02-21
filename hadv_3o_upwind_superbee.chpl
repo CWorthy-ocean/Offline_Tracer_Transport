@@ -78,7 +78,9 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
   //              V-fluxes               //
   /////////////////////////////////////////
 
-  forall (i,j,k) in D3_v.localSubdomain() {
+//  forall (i,j,k) in D3_v.localSubdomain() {
+  var D3_loc = D3.localSubdomain();
+  forall (i,j,k) in {D3_loc.dim[0], 1..(D3_loc.last[1]-2), D3_loc.dim[2]} {
 
     // Slope ratio
       var r = (arr[t,i,j,k] - arr[t,i,j-1,k]) / (arr[t,i,j+1,k] - arr[t,i,j,k] + eps);

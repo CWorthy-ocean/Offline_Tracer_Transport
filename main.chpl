@@ -19,6 +19,7 @@ proc main() {
     initialize_tr();
     initialize_sponge();
 
+
     // timestepping loop
       for step in (Nt_start)..(Nt_start+Nt) {
 
@@ -37,9 +38,9 @@ proc main() {
         Explicit_TimeStep(step);
         t1.stop();
 
-//        t2.start();
-//        Implicit_TimeStep(step);
-//        t2.stop();
+        t2.start();
+        Implicit_TimeStep(step);
+        t2.stop();
 
         // Create polynomial fit to current grid
         t3.start();

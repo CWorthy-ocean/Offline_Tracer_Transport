@@ -6,10 +6,10 @@ use FileSystem;
 //config const hfile          = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/h/';
 //config const velocity_files = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_avg.??????????????.zarr';
 
-config const maskfile = '/glade/derecho/scratch/bachman/UCLA-ROMS/Work/Iceland1/INPUT/Iceland1_grd.nc_perm';
-config const hfile = '/glade/derecho/scratch/bachman/UCLA-ROMS/Work/Iceland1/INPUT/Iceland1_grd.nc_perm';
-config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/Iceland1/run/OUTPUT/DYE/dye_rnd.??????????????.nc??_perm';
-config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/Iceland1/run/OUTPUT/DYE/dye_bry.??????????????.nc??_perm';
+config const maskfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye/INPUTS/dye_grd.nc_perm';
+config const hfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye/INPUTS/dye_grd.nc_perm';
+config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye/run/OUTPUT/dye_rnd.??????????????.nc??_perm';
+config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye/run/OUTPUT/dye_bry.??????????????.nc??_perm';
 config const forcing_files  = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
 
 const num_tracers = 1;

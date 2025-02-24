@@ -5,7 +5,6 @@ use updates;
 use NetCDF_IO;
 use Marbl;
 
-//use Zarr;
 use StencilDist;
 use AllLocalesBarriers;
 use FileSystem;

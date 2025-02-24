@@ -49,7 +49,7 @@ proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
   //              U-fluxes               //
   /////////////////////////////////////////
 
-  forall (i,j,k) in D3_u.localSubdomain() {
+  forall (i,j,k) in D3_int_u.localSubdomain() {
 
     // Slope ratio
       var r = (arr[i,j,t,k] - arr[i-1,j,t,k]) / (arr[i+1,j,t,k] - arr[i,j,t,k] + eps);
@@ -68,6 +68,27 @@ proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
       tmp_U[i,j,k] = tmp_l + sb * (tmp_h - tmp_l);
 
   }
+
+  forall (i,j,k) in D3_edge_u_w.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(U[i,j,k], 0.0) * arr[t,i,j,k] + min(U[i,j,k], 0.0) * arr[t,i+1,j,k];
+
+    // Limited flux
+      tmp_U[i,j,k] = tmp_l;
+
+  }
+
+  forall (i,j,k) in D3_edge_u_e.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(U[i,j,k], 0.0) * arr[t,i,j,k] + min(U[i,j,k], 0.0) * arr[t,i+1,j,k];
+
+    // Limited flux
+      tmp_U[i,j,k] = tmp_l;
+
+  }
+
   update_halos(tmp_U);
 
 }
@@ -78,7 +99,7 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
   //              V-fluxes               //
   /////////////////////////////////////////
 
-  forall (i,j,k) in D3_v.localSubdomain() {
+  forall (i,j,k) in D3_int_v.localSubdomain() {
 
     // Slope ratio 
       var r = (arr[i,j,t,k] - arr[i,j-1,t,k]) / (arr[i,j+1,t,k] - arr[i,j,t,k] + eps);
@@ -97,6 +118,27 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
       tmp_V[i,j,k] = tmp_l + sb * (tmp_h - tmp_l);
 
   }
+
+  forall (i,j,k) in D3_edge_v_s.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(V[i,j,k], 0.0) * arr[t,i,j,k] + min(V[i,j,k], 0.0) * arr[t,i,j+1,k];
+
+    // Limited flux
+      tmp_V[i,j,k] = tmp_l;
+
+  }
+
+  forall (i,j,k) in D3_edge_v_n.localSubdomain() {
+
+    // 1st-order interpolation (constant in the cell)
+      var tmp_l = max(V[i,j,k], 0.0) * arr[t,i,j,k] + min(V[i,j,k], 0.0) * arr[t,i,j+1,k];
+
+    // Limited flux
+      tmp_V[i,j,k] = tmp_l;
+
+  }
+
   update_halos(tmp_V);
 
 }

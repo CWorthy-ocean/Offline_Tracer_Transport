@@ -64,11 +64,11 @@ config const eps : real = 1e-16;
 config const output_freq : int = 6;
 
 // Tracers namelists
-//var marbl_namelist: [1..num_marbl_tracers] string = ["PO4", "NO3", "SiO3", "NH4", "Fe", "Lig", "O2", "DIC", "DIC_ALT_CO2",
-//                        "ALK", "ALK_ALT_CO2", "DOC", "DON", "DOP", "DOPr", "DONr", "DOCr",
-//                        "zooC", "spChl", "spC", "spP", "spFe", "spCaCO3", "diatChl", "diatC",
-//                        "diatP", "diatFe", "diatSi", "diazChl", "diazC", "diazP", "diazFe"];
+var marbl_namelist = ["PO4", "NO3", "SiO3", "NH4", "Fe", "Lig", "O2", "DIC", "DIC_ALT_CO2",
+                        "ALK", "ALK_ALT_CO2", "DOC", "DON", "DOP", "DOPr", "DONr", "DOCr",
+                        "zooC", "spChl", "spC", "spP", "spFe", "spCaCO3", "diatChl", "diatC",
+                        "diatP", "diatFe", "diatSi", "diazChl", "diazC", "diazP", "diazFe"];
 
-//var ts_namelist : [1..num_ts_tracers] string = ["temp", "salt"];
+var ts_namelist = ["temp", "salt"];
 
-var other_namelist : [1..num_other_tracers] string = ["dye"];
+var other_namelist = ["dye"];

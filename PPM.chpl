@@ -12,6 +12,8 @@ use tracers;
 
 proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
 
+  if (num_tracers > 0) {
+
   var D3_loc = D3_int_3D.localSubdomain();
   forall (i,j) in {D3_loc.dim[0], D3_loc.dim[1]} {
 
@@ -103,6 +105,8 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
     } // mask_rho
 
   } // end of forall
+
+} // if num_tracers > 0
 
 } // end of subroutine
 

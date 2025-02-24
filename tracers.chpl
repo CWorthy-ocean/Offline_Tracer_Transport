@@ -46,6 +46,8 @@ use FileSystem;
   var velfiles = glob(velocity_files);
   var bryfiles = glob(boundary_files);
 
+  var marbl_wrappers: [D2] marblInteropType;
+
 proc initialize_tr() {
 
   var D3_loc = D3.localSubdomain();
@@ -99,4 +101,18 @@ proc initialize_tr() {
     update_halos(tracers_marbl_n);
     update_halos(tracers_other_n);
     
+  // Initialize MARBL wrappers
+  var numParSubcols = 1;
+  var numElementsSurfaceFlux = 5;
+  for (i,j) in marbl_wrappers.domain.localSubdomain() {
+    ref localH_n = H_n.localSlice(H_n.domain.localSubdomain());
+    var thicknesses_reversed: [0..<Nz] real;
+    for k in 0..<Nz do thicknesses_reversed[k] = localH_n[i,j,Nz-1-k];
+    
+    var depths_reversed: [0..<Nz] real = + scan thicknesses_reversed[..];
+    var midpoints_reversed = depths_reversed - 0.5 * thicknesses_reversed[..];
+
+    marbl_wrappers[i,j].initMarblInstance(Nz, numParSubcols, 
+      numElementsSurfaceFlux, thicknesses_reversed, depths_reversed, midpoints_reversed, Nz);
+  }
 }

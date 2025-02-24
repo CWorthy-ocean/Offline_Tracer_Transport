@@ -11,9 +11,9 @@ use PPM;
 use forward_step;
 use tracers;
 use updates;
+use marbl_step;
 
 proc main() {
-
   coforall loc in Locales do on loc {
 
     initialize_tr();
@@ -37,6 +37,8 @@ proc main() {
 
         prepare_to_timestep(step);
 
+        //Step MARBL wrappers forward
+        step_marbl_wrappers(step);
 
         // Step forward thickness
         t0.start();

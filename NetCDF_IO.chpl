@@ -169,16 +169,16 @@ proc set_bry(filename : string, varName : string, ref arr, dom_in, t) {
           nc_inq_varid(ncid, vs.c_str(), c_ptrTo(varid_s));
 
           nc_get_vara_double(ncid, varid_w, c_ptrTo(start_w_c), c_ptrTo(count_w_c), c_ptrTo(tmp_west[start_w]));
-          arr[t,0,..,0..<Nz] = tmp_west;
+          arr[0,..,t,0..<Nz] = tmp_west;
 
           nc_get_vara_double(ncid, varid_e, c_ptrTo(start_e_c), c_ptrTo(count_e_c), c_ptrTo(tmp_east[start_e]));
-          arr[t,last[0],..,0..<Nz] = tmp_east;
+          arr[last[0],..,t,0..<Nz] = tmp_east;
 
           nc_get_vara_double(ncid, varid_n, c_ptrTo(start_n_c), c_ptrTo(count_n_c), c_ptrTo(tmp_north[start_n]));
-          arr[t,first[0]..last[0],last[1],0..<Nz] = tmp_north;
+          arr[first[0]..last[0],last[1],t,0..<Nz] = tmp_north;
 
           nc_get_vara_double(ncid, varid_s, c_ptrTo(start_s_c), c_ptrTo(count_s_c), c_ptrTo(tmp_south[start_s]));
-          arr[t,first[0]..last[0],0,0..<Nz] = tmp_south;
+          arr[first[0]..last[0],0,t,0..<Nz] = tmp_south;
 
           nc_close(ncid);
 
@@ -235,13 +235,13 @@ proc set_bry(filename : string, varName : string, ref arr, dom_in, t) {
           nc_inq_varid(ncid, vs.c_str(), c_ptrTo(varid_s));
 
           nc_get_vara_double(ncid, varid_w, c_ptrTo(start_w_c), c_ptrTo(count_w_c), c_ptrTo(tmp_west[start_w]));
-          arr[t,0,..,0..<Nz] = tmp_west;
+          arr[0,..,t,0..<Nz] = tmp_west;
 
           nc_get_vara_double(ncid, varid_n, c_ptrTo(start_n_c), c_ptrTo(count_n_c), c_ptrTo(tmp_north[start_n]));
-          arr[t,first[0]..last[0],last[1],0..<Nz] = tmp_north;
+          arr[first[0]..last[0],last[1],t,0..<Nz] = tmp_north;
 
           nc_get_vara_double(ncid, varid_s, c_ptrTo(start_s_c), c_ptrTo(count_s_c), c_ptrTo(tmp_south[start_s]));
-          arr[t,first[0]..last[0],0,0..<Nz] = tmp_south;
+          arr[first[0]..last[0],0,t,0..<Nz] = tmp_south;
 
           nc_close(ncid);
 
@@ -297,13 +297,13 @@ proc set_bry(filename : string, varName : string, ref arr, dom_in, t) {
           nc_inq_varid(ncid, vs.c_str(), c_ptrTo(varid_s));
 
           nc_get_vara_double(ncid, varid_e, c_ptrTo(start_e_c), c_ptrTo(count_e_c), c_ptrTo(tmp_east[start_e]));
-          arr[t,last[0],..,0..<Nz] = tmp_east;
+          arr[last[0],..,t,0..<Nz] = tmp_east;
 
           nc_get_vara_double(ncid, varid_n, c_ptrTo(start_n_c), c_ptrTo(count_n_c), c_ptrTo(tmp_north[start_n]));
-          arr[t,first[0]..last[0],last[1],0..<Nz] = tmp_north;
+          arr[first[0]..last[0],last[1],t,0..<Nz] = tmp_north;
 
           nc_get_vara_double(ncid, varid_s, c_ptrTo(start_s_c), c_ptrTo(count_s_c), c_ptrTo(tmp_south[start_s]));
-          arr[t,first[0]..last[0],0,0..<Nz] = tmp_south;
+          arr[first[0]..last[0],0,t,0..<Nz] = tmp_south;
 
           nc_close(ncid);
 
@@ -351,10 +351,10 @@ proc set_bry(filename : string, varName : string, ref arr, dom_in, t) {
           nc_inq_varid(ncid, vs.c_str(), c_ptrTo(varid_s));
 
           nc_get_vara_double(ncid, varid_n, c_ptrTo(start_n_c), c_ptrTo(count_n_c), c_ptrTo(tmp_north[start_n]));
-          arr[t,first[0]..last[0],last[1],0..<Nz] = tmp_north;
+          arr[first[0]..last[0],last[1],t,0..<Nz] = tmp_north;
 
           nc_get_vara_double(ncid, varid_s, c_ptrTo(start_s_c), c_ptrTo(count_s_c), c_ptrTo(tmp_south[start_s]));
-          arr[t,first[0]..last[0],0,0..<Nz] = tmp_south;
+          arr[first[0]..last[0],0,t,0..<Nz] = tmp_south;
 
           nc_close(ncid);
 
@@ -392,17 +392,17 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
 
     var att_text : string;
 
-    var zo : [0..<shape[3]] real;
-    var yo : [0..<shape[2]] real;
-    var xo : [0..<shape[1]] real;
+    var zo : [0..<shape[2]] real;
+    var yo : [0..<shape[1]] real;
+    var xo : [0..<shape[0]] real;
 
-    for ii in 0..<shape[3] {
+    for ii in 0..<shape[2] {
       zo[ii] = ii;
     }
-    for ii in 0..<shape[2] {
+    for ii in 0..<shape[1] {
       yo[ii] = ii;
     }
-    for ii in 0..<shape[1] {
+    for ii in 0..<shape[0] {
       xo[ii] = ii;
     }
 
@@ -419,9 +419,9 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
      unlimited length - it can grow as needed. In this example it is
      the time dimension.*/
     extern proc nc_def_dim(ncid : c_int, name : c_ptrConst(c_char), len : c_size_t, idp : c_ptr(c_int)) : c_int;
-    nc_def_dim(ncid, zName.c_str(), shape[3] : c_size_t, z_dimid);
-    nc_def_dim(ncid, yName.c_str(), shape[2] : c_size_t, y_dimid);
-    nc_def_dim(ncid, xName.c_str(), shape[1] : c_size_t, x_dimid);
+    nc_def_dim(ncid, zName.c_str(), shape[2] : c_size_t, z_dimid);
+    nc_def_dim(ncid, yName.c_str(), shape[1] : c_size_t, y_dimid);
+    nc_def_dim(ncid, xName.c_str(), shape[0] : c_size_t, x_dimid);
 
   /* Define the coordinate variables. */
     extern proc nc_def_var(ncid : c_int, name : c_ptrConst(c_char), xtype : nc_type, ndims : c_int, dimidsp : c_ptr(c_int), varidp : c_ptr(c_int)) : c_int;
@@ -475,27 +475,43 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
 
   /* Create arrays of c_size_t for compatibility with NetCDF-C functions. */
   /* Determine where to start reading file, and how many elements to read */
+ 
+    var d_loc = D.localSubdomain();
+
     // Start specifies a hyperslab.  It expects an array of dimension sizes
       var start = tuplify(D.localSubdomain().first);
-      var start_loc = (D.localSubdomain().first[1], D.localSubdomain().first[2], D.localSubdomain().first[3]);
+//      var start_loc = (D.localSubdomain().first[1], D.localSubdomain().first[2], D.localSubdomain().first[3]);
     // Count specifies a hyperslab.  It expects an array of dimension sizes
       var count = tuplify(D.localSubdomain().shape);
-      var count_loc = (D.localSubdomain().shape[1], D.localSubdomain().shape[2], D.localSubdomain().shape[3]);
+//      var count_loc = (D.localSubdomain().shape[1], D.localSubdomain().shape[2], D.localSubdomain().shape[3]);
 
   /* Adding an extra first element to account for the "time" dimension. */
-    var start_c : [0..<start_loc.size] c_size_t;
-    var count_c : [0..<count_loc.size] c_size_t;
+//    var start_c : [0..<start_loc.size] c_size_t;
+//    var count_c : [0..<count_loc.size] c_size_t;
 
-    for i in 0..<start_loc.size {
-      start_c[i] = start_loc[i] : c_size_t;
-      count_c[i] = count_loc[i] : c_size_t;
+    var start_c : [0..<start.size] c_size_t;
+    var count_c : [0..<count.size] c_size_t;
+
+//    for i in 0..<start_loc.size {
+//      start_c[i] = start_loc[i] : c_size_t;
+//      count_c[i] = count_loc[i] : c_size_t;
+//    }
+
+    for i in 0..<start.size {
+      start_c[i] = start[i] : c_size_t;
+      count_c[i] = count[i] : c_size_t;
     }
+
+    var arr_out : [D.localSubdomain()] real;
+    arr_out = arr_in[d_loc.first[0]..d_loc.last[0], d_loc.first[1]..d_loc.last[1], t, d_loc.first[2]..d_loc.last[2]];
 
     extern proc nc_inq_varid(ncid: c_int, varName: c_ptrConst(c_char), varid: c_ptr(c_int));
     nc_inq_varid(ncid, varName.c_str(), c_ptrTo(varid));
 
     extern proc nc_put_vara_double(ncid : c_int, varid : c_int, startp : c_ptr(c_size_t), countp : c_ptr(c_size_t), op : c_ptr(c_double)) : c_int;
-    nc_put_vara_double(ncid, varid, c_ptrTo(start_c), c_ptrTo(count_c), c_ptrTo(arr_in[start]));
+    //nc_put_vara_double(ncid, varid, c_ptrTo(start_c), c_ptrTo(count_c), c_ptrTo(arr_in[start]));
+    nc_put_vara_double(ncid, varid, c_ptrTo(start_c), c_ptrTo(count_c), c_ptrTo(arr_out[start]));
+
 
     nc_close(ncid);
 

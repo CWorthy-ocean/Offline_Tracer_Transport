@@ -1,0 +1,4 @@
+chpl main.chpl -lnetcdf -L/opt/cray/pe/netcdf/4.9.0.7/gnu/9.1/lib -I/opt/cray/pe/netcdf/4.9.0.7/gnu/9.1/include -lnetcdf -M$CHPL_MARBL_PATH $CHPL_MARBL_PATH/MarblChapel.o -lmarbl-gnu -L$MARBL_LIB_PATH --ldflags="-Wl,-rpath,/opt/cray/pe/netcdf/4.9.0.7/gnu/9.1/lib -Wl,-rpath,/opt/cray/pe/netcdf/4.9.0.7/gnu/9.1/lib" --fast -lgfortran --ccflags -fPIE
+
+
+

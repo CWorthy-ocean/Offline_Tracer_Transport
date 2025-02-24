@@ -9,13 +9,13 @@ proc calc_vertical_diffusion(ref arr, ref H) {
 
   // This will update tracer_dagger with an implicit timestep for the vertical diffusion
 
-  var D3_loc = D3_tr.localSubdomain();
-  forall (t,i,j) in {D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]} {
+  var D3_loc = arr.domain.localSubdomain();
+  forall (i,j,t) in {D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]} {
 
-    var tmmp = thomas_diff(t,i,j, arr, H);
+    var tmmp = thomas_diff(i,j,t, arr, H);
 
     for kk in 0..<Nz {
-      arr[t,i,j,kk] = tmmp[kk+1];
+      arr[i,j,t,kk] = tmmp[kk+1];
     }
   }
 
@@ -23,7 +23,7 @@ proc calc_vertical_diffusion(ref arr, ref H) {
 
 }
 
-proc thomas_diff(t, i, j, ref arr, ref H) {
+proc thomas_diff(i, j, t, ref arr, ref H) {
 
   var n = Nz;
   var Dp : domain(1) = {1..n};
@@ -40,19 +40,19 @@ proc thomas_diff(t, i, j, ref arr, ref H) {
   a[1] = 0;
   c[1] = -(2*dt*kappa_v[i,j,1]) / (H[i,j,0] * (H[i,j,1]+H[i,j,0]));
   b[1] = 1 - a[1] - c[1];
-  d[1] = arr[t,i,j,0];
+  d[1] = arr[i,j,t,0];
 
   a[n] = -(2*dt*kappa_v[i,j,n-1]) / (H[i,j,n-1] * (H[i,j,n-1]+H[i,j,n-2]));
   c[n] = 0;
   b[n] = 1 - a[n] - c[n];
-  d[n] = arr[t,i,j,n-1];
+  d[n] = arr[i,j,t,n-1];
 
   for k in 2..<n {
     a[k] = -(2*dt*kappa_v[i,j,k-1]) / (H[i,j,k-1] * (H[i,j,k-1]+H[i,j,k-2]));
     c[k] = -(2*dt*kappa_v[i,j,k]) / (H[i,j,k-1] * (H[i,j,k]+H[i,j,k-1]));
     b[k] = 1 - a[k] - c[k];
 
-    d[k] = arr[t,i,j,k-1];
+    d[k] = arr[i,j,t,k-1];
   }
 
   cp[1] = c[1] / b[1];

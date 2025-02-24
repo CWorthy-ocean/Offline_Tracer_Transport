@@ -6,13 +6,16 @@ use FileSystem;
 //config const hfile          = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_grd.zarr/h/';
 //config const velocity_files = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/INPUT/Iceland1_avg.??????????????.zarr';
 
-config const maskfile = '/glade/derecho/scratch/bachman/UCLA-ROMS/Work/Iceland1/INPUT/Iceland1_grd.nc_perm';
-config const hfile = '/glade/derecho/scratch/bachman/UCLA-ROMS/Work/Iceland1/INPUT/Iceland1_grd.nc_perm';
-config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/Iceland1/run/OUTPUT/DYE/dye_rnd.??????????????.nc??_perm';
-config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/Iceland1/run/OUTPUT/DYE/dye_bry.??????????????.nc??_perm';
+config const maskfile = '/pscratch/sd/s/sbachman/DYE/dye_grd.nc_perm';
+config const hfile = '/pscratch/sd/s/sbachman/DYE/dye_grd.nc_perm';
+config const velocity_files = '/pscratch/sd/s/sbachman/DYE/dye_rst.??????????????.nc??_perm';
+config const boundary_files = '/pscratch/sd/s/sbachman/DYE/dye_bry.??????????????.nc??_perm';
 config const forcing_files  = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
 
-const num_tracers = 1;
+const num_ts_tracers = 0;
+const num_marbl_tracers = 0;
+const num_other_tracers = 1;
+
 config const Nx = 66;
 config const Ny = 34;
 config const Nz = 100;
@@ -63,3 +66,13 @@ config const eps : real = 1e-16;
 
 // Output frequency (in timesteps);
 config const output_freq : int = 6;
+
+// Tracers namelists
+//var marbl_namelist: [1..num_marbl_tracers] string = ["PO4", "NO3", "SiO3", "NH4", "Fe", "Lig", "O2", "DIC", "DIC_ALT_CO2",
+//                        "ALK", "ALK_ALT_CO2", "DOC", "DON", "DOP", "DOPr", "DONr", "DOCr",
+//                        "zooC", "spChl", "spC", "spP", "spFe", "spCaCO3", "diatChl", "diatC",
+//                        "diatP", "diatFe", "diatSi", "diazChl", "diazC", "diazP", "diazFe"];
+
+//var ts_namelist : [1..num_ts_tracers] string = ["temp", "salt"];
+
+var other_namelist : [1..num_other_tracers] string = ["dye"];

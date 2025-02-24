@@ -10,7 +10,7 @@ use tracers;
 // This function will apply the piecewise parabolic method (PPM) as described in
 // White and Adcroft (2008).
 
-proc Polyfit() {
+proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
 
   var D3_loc = D3.localSubdomain();
   forall (i,j) in {D3_loc.dim[0], D3_loc.dim[1]} {
@@ -19,7 +19,7 @@ proc Polyfit() {
 
     var interface_values : [1..num_tracers,0..Nz] real;
 
-    interface_values = calc_interface_values(i, j, tracer_dagger, H_dagger);
+    interface_values = calc_interface_values(i, j, tracer_dagger, H_dagger, num_tracers);
 
     // Create the coefficients for the polynomial in each cell
     // Going to treat "left" as equivalent to "bottom", and "right" as equivalent to "top"
@@ -30,8 +30,8 @@ proc Polyfit() {
 
     for (t,k) in {1..num_tracers,0..<Nz} {
       a0[t,k] = interface_values[t,k];
-      a1[t,k] = 6*tracer_dagger[t,i,j,k] - 4*interface_values[t,k] - 2*interface_values[t,k+1];
-      a2[t,k] = 3*(interface_values[t,k] + interface_values[t,k+1] - 2*tracer_dagger[t,i,j,k]);
+      a1[t,k] = 6*tracer_dagger[i,j,t,k] - 4*interface_values[t,k] - 2*interface_values[t,k+1];
+      a2[t,k] = 3*(interface_values[t,k] + interface_values[t,k+1] - 2*tracer_dagger[i,j,t,k]);
     }
 
     // These are vector copies of each column.  H_orig is going to have one extra layer
@@ -97,7 +97,7 @@ proc Polyfit() {
       }
 
       for (t,kk) in {1..num_tracers,0..<Nz} {
-        tracer_n[t,i,j,kk] = reconstruction[t,kk];
+        tracer_n[i,j,t,kk] = reconstruction[t,kk];
       }
 
     } // mask_rho
@@ -117,7 +117,7 @@ proc integrate(a0, a1, a2, z0, z1) {
   return mean_of_integral;
 }
 
-proc calc_interface_values(i, j, ref arr, ref H) {
+proc calc_interface_values(i, j, ref arr, ref H, num_tracers) {
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //                                     Get tracer values at layer interfaces                               //
@@ -154,7 +154,7 @@ proc calc_interface_values(i, j, ref arr, ref H) {
       iH = 1.0/(h_t - h_b);
 
       for t in 1..num_tracers {
-        B[t,k] = arr[t,i,j,k];
+        B[t,k] = arr[i,j,t,k];
       }
     }
 
@@ -177,7 +177,7 @@ proc calc_interface_values(i, j, ref arr, ref H) {
       iH = 1.0/(h_t - h_b);
 
       for t in 1..num_tracers {
-        B[t,k] = arr[t,i,j,Nz-1-k];
+        B[t,k] = arr[i,j,t,Nz-1-k];
       }
     }
 
@@ -259,7 +259,7 @@ proc thomas_PPM(t, i, j, Ts_bot, Ts_top, ref arr, ref H) {
       b[k+1] = 1.0;
       c[k+1] = beta;
 
-      d[k+1] = d1*arr[t,i,j,k-1] + d2*arr[t,i,j,k];
+      d[k+1] = d1*arr[i,j,t,k-1] + d2*arr[i,j,t,k];
     }
 
     cp[1] = c[1] / b[1];

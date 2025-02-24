@@ -11,12 +11,7 @@ use tracers;
 use updates;
 use vertical_diffusion;
 
-
-proc Explicit_TimeStep(step : int) {
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //     Step forward the tracer using Easter's Psuedo-compressibility and Strang splitting.          //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
+proc Explicit_TimeStep_H() {
 
   // Update in x-direction
 
@@ -25,6 +20,27 @@ proc Explicit_TimeStep(step : int) {
       H_tilde[i,j,k] = H_n[i,j,k] + dt*ktmp[i,j,k];
     }
 
+  // Update in y-direction
+
+    RHS_H_V(ktmp, V_n);
+    forall (i,j,k) in D3.localSubdomain() {
+      H_dagger[i,j,k] = H_tilde[i,j,k] + dt*ktmp[i,j,k];
+    }
+}
+
+proc Explicit_TimeStep_tr(ref tracer_n, ref tracer_tilde, ref tracer_dagger, num_tracers, step : int) {
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //     Step forward the tracer using Easter's Psuedo-compressibility and Strang splitting.          //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Update in x-direction
+//
+//    RHS_H_U(ktmp, U_n);
+//    forall (i,j,k) in D3.localSubdomain() {
+//      H_tilde[i,j,k] = H_n[i,j,k] + dt*ktmp[i,j,k];
+//    }
+
     for t in 1..num_tracers {
       calc_horizontal_fluxes_U(U_n, tmp_U_adv, tracer_n, t);
       calc_diffusive_fluxes_U(tmp_U_diff, tracer_n, H_n, t);
@@ -32,18 +48,18 @@ proc Explicit_TimeStep(step : int) {
       RHS_tr_U(ktmp_tr, tmp_U_adv, tmp_U_diff);
 
       forall (i,j,k) in D3.localSubdomain() {
-        tracer_tilde[t,i,j,k] =  (tracer_n[t,i,j,k]*H_n[i,j,k] + dt*ktmp_tr[i,j,k]) / H_tilde[i,j,k];
+        tracer_tilde[i,j,t,k] =  (tracer_n[i,j,t,k]*H_n[i,j,k] + dt*ktmp_tr[i,j,k]) / H_tilde[i,j,k];
       }
     }
 
     update_halos(tracer_tilde);
 
   // Update in y-direction
-
-    RHS_H_V(ktmp, V_n);
-    forall (i,j,k) in D3.localSubdomain() {
-      H_dagger[i,j,k] = H_tilde[i,j,k] + dt*ktmp[i,j,k];
-    }
+//
+//    RHS_H_V(ktmp, V_n);
+//    forall (i,j,k) in D3.localSubdomain() {
+//      H_dagger[i,j,k] = H_tilde[i,j,k] + dt*ktmp[i,j,k];
+//    }
 
     for t in 1..num_tracers {
       calc_horizontal_fluxes_V(V_n, tmp_V_adv, tracer_tilde, t);
@@ -52,7 +68,7 @@ proc Explicit_TimeStep(step : int) {
       RHS_tr_V(ktmp_tr, tmp_V_adv, tmp_V_diff);
 
       forall (i,j,k) in D3.localSubdomain() {
-        tracer_dagger[t,i,j,k] =  (tracer_tilde[t,i,j,k]*H_tilde[i,j,k] + dt*ktmp_tr[i,j,k]) / H_dagger[i,j,k];
+        tracer_dagger[i,j,t,k] =  (tracer_tilde[i,j,t,k]*H_tilde[i,j,k] + dt*ktmp_tr[i,j,k]) / H_dagger[i,j,k];
       }
     }
 
@@ -60,7 +76,7 @@ proc Explicit_TimeStep(step : int) {
 
 }
 
-proc Implicit_TimeStep(step : int) {
+proc Implicit_TimeStep(ref tracer_dagger) {
 
   calc_vertical_diffusion(tracer_dagger, H_dagger);
 

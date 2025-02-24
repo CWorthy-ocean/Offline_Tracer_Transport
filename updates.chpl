@@ -1,5 +1,5 @@
 use AllLocalesBarriers;
-use Zarr;
+//use Zarr;
 
 use domains;
 use dynamics;
@@ -31,12 +31,20 @@ proc prepare_next_timestep(step : int) {
 
   // Load the boundary data for the upcoming timestep
     var bryloc = bryfiles[step+1];
-    for t in 1..num_tracers {
-      set_bry(bryloc, "dye", tracer_n, D3.localSubdomain(), t);
+//    for t in 1..num_ts_tracers {
+//      set_bry(bryloc, ts_namelist[t], tracers_ts_n, D3.localSubdomain(), t);
+//    }
+//    for t in 1..num_marbl_tracers {
+//      set_bry(bryloc, marbl_namelist[t], tracers_marbl_n, D3.localSubdomain(), t);
+//    }
+    for t in 1..num_other_tracers {
+      set_bry(bryloc, other_namelist[t], tracers_other_n, D3.localSubdomain(), t);
     }
 
   allLocalesBarrier.barrier();
-  update_halos(tracer_n);
+//  update_halos(tracers_ts_n);
+//  update_halos(tracers_marbl_n);
+  update_halos(tracers_other_n);
 
 }
 

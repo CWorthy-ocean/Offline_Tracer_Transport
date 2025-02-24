@@ -3,8 +3,9 @@ use domains;
 use sigma_coordinate;
 use updates;
 use NetCDF_IO;
+use Marbl;
 
-use Zarr;
+//use Zarr;
 use StencilDist;
 use AllLocalesBarriers;
 use FileSystem;
@@ -16,9 +17,17 @@ use FileSystem;
   var ktmp : [D3] real;
   var ktmp_tr : [D3] real;
 
-  var tracer_n : [D3_tr] real;
-  var tracer_tilde : [D3_tr] real;
-  var tracer_dagger : [D3_tr] real;
+  var tracers_ts_n : [D3_ts] real;
+  var tracers_ts_tilde : [D3_ts] real;
+  var tracers_ts_dagger : [D3_ts] real;
+
+  var tracers_marbl_n : [D3_marbl] real;
+  var tracers_marbl_tilde : [D3_marbl] real;
+  var tracers_marbl_dagger : [D3_marbl] real;
+
+  var tracers_other_n : [D3_other] real;
+  var tracers_other_tilde : [D3_other] real;
+  var tracers_other_dagger : [D3_other] real;
 
   var mask_rho : [D2] real;
   var h : [D2] real;
@@ -51,15 +60,31 @@ proc initialize_tr() {
 //  get_var(velfiles[Nt_start], 'Akt', kappa_v, D3);
 
   if (restart == 1) {
-    for t in 1..num_tracers {
-      get_var(restart_file, 'tracer', ktmp, D3);
-      tracer_n[t,D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]] = ktmp[D3_loc];
+//    for t in 1..num_ts_tracers {
+//      get_var(restart_file, ts_namelist[t], ktmp, D3);
+//      tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+//    }
+//    for t in 1..num_marbl_tracers {
+//      get_var(restart_file, marbl_namelist[t], ktmp, D3);
+//      tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+//    }
+    for t in 1..num_other_tracers {
+      get_var(restart_file, other_namelist[t], ktmp, D3);
+      tracers_other_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
   }
   else {
-    for t in 1..num_tracers {
-      get_var(velfiles[Nt_start], 'dye', ktmp, D3);
-      tracer_n[t,D3_loc.dim[0], D3_loc.dim[1], D3_loc.dim[2]] = ktmp[D3_loc];
+//    for t in 1..num_ts_tracers {
+//      get_var(velfiles[Nt_start], ts_namelist[t], ktmp, D3);
+//      tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+//    }
+//    for t in 1..num_marbl_tracers {
+//      get_var(velfiles[Nt_start], marbl_namelist[t], ktmp, D3);
+//      tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+//    }
+    for t in 1..num_other_tracers {
+      get_var(velfiles[Nt_start], other_namelist[t], ktmp, D3);
+      tracers_other_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
   }
 
@@ -71,6 +96,8 @@ proc initialize_tr() {
     update_halos(h);
     update_halos(H0);
     update_halos(kappa_v);
-    update_halos(tracer_n);
-
+    update_halos(tracers_ts_n);
+    update_halos(tracers_marbl_n);
+    update_halos(tracers_other_n);
+    
 }

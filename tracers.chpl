@@ -61,28 +61,28 @@ proc initialize_tr() {
 //  get_var(velfiles[Nt_start], 'Akt', kappa_v, D3);
 
   if (restart == 1) {
-//    for t in 1..num_ts_tracers {
-//      get_var(restart_file, ts_namelist[t], ktmp, D3);
-//      tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
-//    }
-//    for t in 1..num_marbl_tracers {
-//      get_var(restart_file, marbl_namelist[t], ktmp, D3);
-//      tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
-//    }
+    for t in 1..num_ts_tracers {
+      get_var(restart_file, ts_namelist[t], ktmp, D3);
+      tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+    }
+    for t in 1..num_marbl_tracers {
+      get_var(restart_file, marbl_namelist[t], ktmp, D3);
+      tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+    }
     for t in 1..num_other_tracers {
       get_var(restart_file, other_namelist[t], ktmp, D3);
       tracers_other_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
   }
   else {
-//    for t in 1..num_ts_tracers {
-//      get_var(velfiles[Nt_start], ts_namelist[t], ktmp, D3);
-//      tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
-//    }
-//    for t in 1..num_marbl_tracers {
-//      get_var(velfiles[Nt_start], marbl_namelist[t], ktmp, D3);
-//      tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
-//    }
+    for t in 1..num_ts_tracers {
+      get_var(velfiles[Nt_start], ts_namelist[t], ktmp, D3);
+      tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+    }
+    for t in 1..num_marbl_tracers {
+      get_var(velfiles[Nt_start], marbl_namelist[t], ktmp, D3);
+      tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
+    }
     for t in 1..num_other_tracers {
       get_var(velfiles[Nt_start], other_namelist[t], ktmp, D3);
       tracers_other_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];

@@ -34,6 +34,8 @@ proc Explicit_TimeStep_tr(ref tracer_n, ref tracer_tilde, ref tracer_dagger, num
   //     Step forward the tracer using Easter's Psuedo-compressibility and Strang splitting.          //
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  if (num_tracers > 0) {
+
   // Update in x-direction
 
     for t in 1..num_tracers {
@@ -64,11 +66,17 @@ proc Explicit_TimeStep_tr(ref tracer_n, ref tracer_tilde, ref tracer_dagger, num
 
     allLocalesBarrier.barrier();
 
+  } // num_tracers > 0
+
 }
 
-proc Implicit_TimeStep(ref tracer_dagger) {
+proc Implicit_TimeStep(ref tracer_dagger, num_tracers) {
 
-  calc_vertical_diffusion(tracer_dagger, H_dagger);
+  if (num_tracers > 0) {
+
+    calc_vertical_diffusion(tracer_dagger, H_dagger);
+
+  } // num_tracers > 0
 
 }
 

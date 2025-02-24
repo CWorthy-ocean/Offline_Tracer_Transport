@@ -60,15 +60,15 @@ proc main() {
 
 
         t2a.start();
-        Implicit_TimeStep(tracers_ts_dagger);
+        Implicit_TimeStep(tracers_ts_dagger, num_ts_tracers);
         t2a.stop();
 
         t2b.start();
-        Implicit_TimeStep(tracers_marbl_dagger);
+        Implicit_TimeStep(tracers_marbl_dagger, num_marbl_tracers);
         t2b.stop();
 
         t2c.start();
-        Implicit_TimeStep(tracers_other_dagger);
+        Implicit_TimeStep(tracers_other_dagger, num_other_tracers);
         t2c.stop();
 
 

@@ -89,8 +89,9 @@ proc get_var(filename : string, varName : string, ref arr_in, dom_in) {
           var floc = filename;
           nc_open(floc.c_str(), NC_NOWRITE, ncid);
 
+          var varName_loc = varName;
         /* Get the variable ID */
-          nc_inq_varid(ncid, varName.c_str(), c_ptrTo(varid));
+          nc_inq_varid(ncid, varName_loc.c_str(), c_ptrTo(varid));
 
           nc_get_vara_double(ncid, varid, c_ptrTo(start_c), c_ptrTo(count_c), c_ptrTo(arr_in[start]));
 
@@ -475,7 +476,7 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
 
   /* Create arrays of c_size_t for compatibility with NetCDF-C functions. */
   /* Determine where to start reading file, and how many elements to read */
- 
+
     var d_loc = D.localSubdomain();
 
     // Start specifies a hyperslab.  It expects an array of dimension sizes

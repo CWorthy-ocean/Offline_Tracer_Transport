@@ -25,25 +25,25 @@ proc prepare_next_timestep(step : int) {
 
   // Copy next thickness to current thickness
     forall (i,j,k) in D3.localSubdomain() {
-      H_n[i,j,k] = H_np1[i,j,k];
+      H_n.localAccess[i,j,k] = H_np1.localAccess[i,j,k];
     }
     update_halos(H_n);
 
   // Load the boundary data for the upcoming timestep
     var bryloc = bryfiles[step+1];
-//    for t in 1..num_ts_tracers {
-//      set_bry(bryloc, ts_namelist[t], tracers_ts_n, D3.localSubdomain(), t);
-//    }
-//    for t in 1..num_marbl_tracers {
-//      set_bry(bryloc, marbl_namelist[t], tracers_marbl_n, D3.localSubdomain(), t);
-//    }
+    for t in 1..num_ts_tracers {
+      set_bry(bryloc, ts_namelist[t-1], tracers_ts_n, D3.localSubdomain(), t);
+    }
+    for t in 1..num_marbl_tracers {
+      set_bry(bryloc, marbl_namelist[t-1], tracers_marbl_n, D3.localSubdomain(), t);
+    }
     for t in 1..num_other_tracers {
-      set_bry(bryloc, other_namelist[t], tracers_other_n, D3.localSubdomain(), t);
+      set_bry(bryloc, other_namelist[t-1], tracers_other_n, D3.localSubdomain(), t);
     }
 
   allLocalesBarrier.barrier();
-//  update_halos(tracers_ts_n);
-//  update_halos(tracers_marbl_n);
+  update_halos(tracers_ts_n);
+  update_halos(tracers_marbl_n);
   update_halos(tracers_other_n);
 
 }
@@ -55,7 +55,7 @@ proc update_thickness(ref zeta, ref H, ref H0, ref h, step : int) {
 
   // From SM09, Eq. 2.13
     forall (i,j,k) in D3.localSubdomain() {
-      H[i,j,k] = H0[i,j,k] * (1 + zeta[i,j] / h[i,j]);
+      H.localAccess[i,j,k] = H0.localAccess[i,j,k] * (1 + zeta.localAccess[i,j] / h.localAccess[i,j]);
     }
 
   allLocalesBarrier.barrier();

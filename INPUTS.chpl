@@ -2,37 +2,37 @@ use FileSystem;
 
 /* INPUT PARAMETERS */
 
-config const maskfile = '/pscratch/sd/s/sbachman/DYE/dye_grd.nc_perm';
-config const hfile = '/pscratch/sd/s/sbachman/DYE/dye_grd.nc_perm';
-config const velocity_files = '/pscratch/sd/s/sbachman/DYE/dye_rnd.??????????????.nc??_perm';
-config const boundary_files = '/pscratch/sd/s/sbachman/DYE/dye_bry.??????????????.nc??_perm';
+config const maskfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic/INPUTS/dye_grd.nc_perm';
+config const hfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic/INPUTS/dye_grd.nc_perm';
+config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_rnd.??????????????.nc??_perm';
+config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_bry.??????????????.nc??_perm';
 config const forcing_files  = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
 
-const num_ts_tracers = 0;
+const num_ts_tracers = 2;
 const num_marbl_tracers = 0;
-const num_other_tracers = 1;
+const num_other_tracers = 2;
 
-config const Nx = 66;
-config const Ny = 34;
+config const Nx = 1082;
+config const Ny = 1082;
 config const Nz = 100;
 
 /* Restart? */
 config const restart = 0;
 config const restart_file = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/tracer.0000003510.nc';
 config const Nt_start : int = 0;
-config const Nt : int = 100;
+config const Nt : int = 4;
 
 /* Sigma coordinate parameters */
 config const theta_s : real = 5.0;
 config const theta_b : real = 2.0;
 config const hc      : real = 300.0;
 
-config const dx : real = 4000;
-config const dy : real = 4000;
+config const dx : real = 1000;
+config const dy : real = 1000;
 const area = dx * dy;
 const iarea = 1.0 / area;
 
-config const dt : real = 60.0;
+config const dt : real = 300.0;
 
 // For LF-AM3 scheme
 config const gamma = 0.0833333333333;
@@ -48,7 +48,7 @@ config const one_sixth = 1.0 / 6.0;
 config const one_third = 1.0 / 3.0;
 
 // For sponge
-config const v_sponge : real = 300;
+config const v_sponge : real = 100;
 config const sponge_width : real = 15;
 
 // Horizontal viscosity
@@ -71,4 +71,4 @@ var marbl_namelist = ["PO4", "NO3", "SiO3", "NH4", "Fe", "Lig", "O2", "DIC", "DI
 
 var ts_namelist = ["temp", "salt"];
 
-var other_namelist = ["dye"];
+var other_namelist = ["dye1", "dye2"];

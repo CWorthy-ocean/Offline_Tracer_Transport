@@ -16,8 +16,8 @@ proc calc_diffusive_fluxes_U(ref U, ref arr, ref H, const t) {
 
   forall (i,j,k) in D3_u.localSubdomain() {
 
-    U[i,j,k] = 0.5*(visc[i,j,k] + visc[i+1,j,k]) * (arr[i+1,j,t,k] - arr[i,j,t,k])
-                         * dy * 0.5 * (H[i,j,k] + H[i+1,j,k]) / dx;
+    U.localAccess[i,j,k] = 0.5*(visc.localAccess[i,j,k] + visc.localAccess[i+1,j,k]) * (arr.localAccess[i+1,j,t,k] - arr.localAccess[i,j,t,k])
+                         * dy * 0.5 * (H.localAccess[i,j,k] + H.localAccess[i+1,j,k]) / dx;
   }
 
   update_halos(U);
@@ -32,8 +32,8 @@ proc calc_diffusive_fluxes_V(ref V, ref arr, ref H, const t) {
 
   forall (i,j,k) in D3_v.localSubdomain() {
 
-    V[i,j,k] = 0.5*(visc[i,j,k] + visc[i,j+1,k]) * (arr[i,j+1,t,k] - arr[i,j,t,k])
-                         * dx * 0.5 * (H[i,j,k] + H[i,j+1,k]) / dy;
+    V.localAccess[i,j,k] = 0.5*(visc.localAccess[i,j,k] + visc.localAccess[i,j+1,k]) * (arr.localAccess[i,j+1,t,k] - arr.localAccess[i,j,t,k])
+                         * dx * 0.5 * (H.localAccess[i,j,k] + H.localAccess[i,j+1,k]) / dy;
   }
 
   update_halos(V);

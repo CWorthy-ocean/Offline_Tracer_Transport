@@ -17,7 +17,7 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
   var D3_loc = D3_int_3D.localSubdomain();
   forall (i,j) in {D3_loc.dim[0], D3_loc.dim[1]} {
 
-  if (mask_rho[i,j] == 1) {
+  if (mask_rho.localAccess[i,j] == 1) {
 
     var interface_values : [1..num_tracers,0..Nz] real;
 
@@ -32,8 +32,8 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
 
     for (t,k) in {1..num_tracers,0..<Nz} {
       a0[t,k] = interface_values[t,k];
-      a1[t,k] = 6*tracer_dagger[i,j,t,k] - 4*interface_values[t,k] - 2*interface_values[t,k+1];
-      a2[t,k] = 3*(interface_values[t,k] + interface_values[t,k+1] - 2*tracer_dagger[i,j,t,k]);
+      a1[t,k] = 6*tracer_dagger.localAccess[i,j,t,k] - 4*interface_values[t,k] - 2*interface_values[t,k+1];
+      a2[t,k] = 3*(interface_values[t,k] + interface_values[t,k+1] - 2*tracer_dagger.localAccess[i,j,t,k]);
     }
 
     // These are vector copies of each column.  H_orig is going to have one extra layer
@@ -42,8 +42,8 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
       var H_orig : [0..<Nz] real;
       var H_new  : [0..<Nz] real;
       for kk in 0..<Nz {
-        H_orig[kk] = H_dagger[i,j,kk];
-        H_new[kk]  = H_np1[i,j,kk];
+        H_orig[kk] = H_dagger.localAccess[i,j,kk];
+        H_new[kk]  = H_np1.localAccess[i,j,kk];
       }
 
     // Going to normalize the thicknesses to make the forthcoming loop logic and
@@ -99,7 +99,7 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
       }
 
       for (t,kk) in {1..num_tracers,0..<Nz} {
-        tracer_n[i,j,t,kk] = reconstruction[t,kk];
+        tracer_n.localAccess[i,j,t,kk] = reconstruction[t,kk];
       }
 
     } // mask_rho
@@ -141,7 +141,7 @@ proc calc_interface_values(i, j, ref arr, ref H, num_tracers) {
     var M : [0..ord,0..ord] real;
 
     var h_b : real = 0;
-    var h_t : real = H[i,j,0];
+    var h_t : real = H.localAccess[i,j,0];
     var iH = 1.0 / (h_t - h_b);
 
     var Ts_bot : [1..num_tracers] real;
@@ -153,12 +153,12 @@ proc calc_interface_values(i, j, ref arr, ref H, num_tracers) {
         M[k,kk] = (1.0 / kkp1)*iH*(h_t**(kkp1) - h_b**(kkp1));
       }
 
-      h_b = h_b + H[i,j,k];
-      h_t = h_t + H[i,j,k+1];
+      h_b = h_b + H.localAccess[i,j,k];
+      h_t = h_t + H.localAccess[i,j,k+1];
       iH = 1.0/(h_t - h_b);
 
       for t in 1..num_tracers {
-        B[t,k] = arr[i,j,t,k];
+        B[t,k] = arr.localAccess[i,j,t,k];
       }
     }
 
@@ -168,7 +168,7 @@ proc calc_interface_values(i, j, ref arr, ref H, num_tracers) {
 
     // Top boundary extrapolation
     h_b = 0;
-    h_t = H[i,j,Nz-1];
+    h_t = H.localAccess[i,j,Nz-1];
     iH = 1.0/(h_t - h_b);
     for k in 0..ord {
       for kk in 0..ord {
@@ -176,12 +176,12 @@ proc calc_interface_values(i, j, ref arr, ref H, num_tracers) {
         M[k,kk] = (1.0 / kkp1)*iH*(h_t**kkp1 - h_b**kkp1);
       }
 
-      h_b = h_b + H[i,j,Nz-1-k];
-      h_t = h_t + H[i,j,Nz-2-k];
+      h_b = h_b + H.localAccess[i,j,Nz-1-k];
+      h_t = h_t + H.localAccess[i,j,Nz-2-k];
       iH = 1.0/(h_t - h_b);
 
       for t in 1..num_tracers {
-        B[t,k] = arr[i,j,t,Nz-1-k];
+        B[t,k] = arr.localAccess[i,j,t,Nz-1-k];
       }
     }
 
@@ -251,8 +251,8 @@ proc thomas_PPM(t, i, j, Ts_bot, Ts_top, ref arr, ref H) {
     d[n] = Ts_top[t];
 
     for k in 1..(n-2) {
-      var h0 = H[i,j,k-1];
-      var h1 = H[i,j,k];
+      var h0 = H.localAccess[i,j,k-1];
+      var h1 = H.localAccess[i,j,k];
 
       var alpha = (h1**2) / ((h0 + h1)**2);
       var beta = (h0**2) / ((h0 + h1)**2);
@@ -263,7 +263,7 @@ proc thomas_PPM(t, i, j, Ts_bot, Ts_top, ref arr, ref H) {
       b[k+1] = 1.0;
       c[k+1] = beta;
 
-      d[k+1] = d1*arr[i,j,t,k-1] + d2*arr[i,j,t,k];
+      d[k+1] = d1*arr.localAccess[i,j,t,k-1] + d2*arr.localAccess[i,j,t,k];
     }
 
     cp[1] = c[1] / b[1];

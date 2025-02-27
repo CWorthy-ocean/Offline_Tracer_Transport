@@ -11,13 +11,16 @@ use PPM;
 use forward_step;
 use tracers;
 use updates;
-use marbl_step;
+//use marbl_step;
 
 proc main() {
   coforall loc in Locales do on loc {
 
     initialize_tr();
     initialize_sponge();
+
+    var t : stopwatch;
+    t.start();
 
     // timestepping loop
       for step in (Nt_start)..(Nt_start+Nt) {
@@ -38,7 +41,7 @@ proc main() {
         prepare_to_timestep(step);
 
         //Step MARBL wrappers forward
-        step_marbl_wrappers(step);
+//        step_marbl_wrappers(step);
 
         // Step forward thickness
         t0.start();
@@ -94,9 +97,9 @@ proc main() {
         allLocalesBarrier.barrier();
 
         t5.start();
-        if ((step % output_freq) == 0) {
-          WriteOutput(tracers_other_n, D3, "tracer", "stuff", step, 1);
-	}
+//        if ((step % output_freq) == 0) {
+//          WriteOutput(tracers_other_n, D3, "tracer", "stuff", step, 1);
+//	}
         t5.stop();
 
         writeln("Locale ", here.id, " time for explicit step (ts): ", t1a.elapsed());
@@ -114,6 +117,10 @@ proc main() {
 
 
     } // timestepping loop
+    t.stop();
+    writeln("Locale ", here.id, " total time: ", t.elapsed());
+    writeln();
+
 
   } // coforall loop
 

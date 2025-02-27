@@ -3,7 +3,7 @@ use domains;
 use sigma_coordinate;
 use updates;
 use NetCDF_IO;
-use Marbl;
+//use Marbl;
 
 use StencilDist;
 use AllLocalesBarriers;
@@ -46,7 +46,7 @@ use FileSystem;
   var velfiles = glob(velocity_files);
   var bryfiles = glob(boundary_files);
 
-  var marbl_wrappers: [D2] marblInteropType;
+//  var marbl_wrappers: [D2] marblInteropType;
 
 proc initialize_tr() {
 
@@ -62,29 +62,29 @@ proc initialize_tr() {
 
   if (restart == 1) {
     for t in 1..num_ts_tracers {
-      get_var(restart_file, ts_namelist[t], ktmp, D3);
+      get_var(restart_file, ts_namelist[t-1], ktmp, D3);
       tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
     for t in 1..num_marbl_tracers {
-      get_var(restart_file, marbl_namelist[t], ktmp, D3);
+      get_var(restart_file, marbl_namelist[t-1], ktmp, D3);
       tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
     for t in 1..num_other_tracers {
-      get_var(restart_file, other_namelist[t], ktmp, D3);
+      get_var(restart_file, other_namelist[t-1], ktmp, D3);
       tracers_other_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
   }
   else {
     for t in 1..num_ts_tracers {
-      get_var(velfiles[Nt_start], ts_namelist[t], ktmp, D3);
+      get_var(velfiles[Nt_start], ts_namelist[t-1], ktmp, D3);
       tracers_ts_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
     for t in 1..num_marbl_tracers {
-      get_var(velfiles[Nt_start], marbl_namelist[t], ktmp, D3);
+      get_var(velfiles[Nt_start], marbl_namelist[t-1], ktmp, D3);
       tracers_marbl_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
     for t in 1..num_other_tracers {
-      get_var(velfiles[Nt_start], other_namelist[t], ktmp, D3);
+      get_var(velfiles[Nt_start], other_namelist[t-1], ktmp, D3);
       tracers_other_n[D3_loc.dim[0], D3_loc.dim[1], t, D3_loc.dim[2]] = ktmp[D3_loc];
     }
   }
@@ -100,7 +100,7 @@ proc initialize_tr() {
     update_halos(tracers_ts_n);
     update_halos(tracers_marbl_n);
     update_halos(tracers_other_n);
-    
+/*
   // Initialize MARBL wrappers
   var numParSubcols = 1;
   var numElementsSurfaceFlux = 5;
@@ -108,11 +108,13 @@ proc initialize_tr() {
     ref localH_n = H_n.localSlice(H_n.domain.localSubdomain());
     var thicknesses_reversed: [0..<Nz] real;
     for k in 0..<Nz do thicknesses_reversed[k] = localH_n[i,j,Nz-1-k];
-    
+
     var depths_reversed: [0..<Nz] real = + scan thicknesses_reversed[..];
     var midpoints_reversed = depths_reversed - 0.5 * thicknesses_reversed[..];
 
-    marbl_wrappers[i,j].initMarblInstance(Nz, numParSubcols, 
+    marbl_wrappers[i,j].initMarblInstance(Nz, numParSubcols,
       numElementsSurfaceFlux, thicknesses_reversed, depths_reversed, midpoints_reversed, Nz);
   }
+*/
+
 }

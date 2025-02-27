@@ -11,6 +11,7 @@ use INPUTS;
   const FullDomain_u = {0..<(Nx-1), 0..<Ny, 0..<Nz};
   const FullDomain_v = {0..<Nx, 0..<(Ny-1), 0..<Nz};
 
+  const IntDomain_2D = {1..<(Nx-1), 1..<(Ny-1)};
   const IntDomain_3D = {1..<(Nx-1), 1..<(Ny-1), 0..<Nz};
   const IntDomain_ts = {1..<(Nx-1), 1..<(Ny-1), 1..num_ts_tracers, 0..<Nz};
   const IntDomain_marbl = {1..<(Nx-1), 1..<(Ny-1), 1..num_marbl_tracers, 0..<Nz};
@@ -44,6 +45,7 @@ use INPUTS;
   const stencil_u = new stencilDist(boundingBox=FullDomain_u, targetLocales=myTargetLocales_u, fluff=fluff_u);
   const stencil_v = new stencilDist(boundingBox=FullDomain_v, targetLocales=myTargetLocales_v, fluff=fluff_v);
 
+  const stencil_int_2D = new stencilDist(boundingBox=IntDomain_2D, targetLocales=myTargetLocales_2D, fluff=fluff_2D);
   const stencil_int_3D = new stencilDist(boundingBox=IntDomain_3D, targetLocales=myTargetLocales_3D, fluff=fluff_3D);
   const stencil_int_ts = new stencilDist(boundingBox=IntDomain_ts, targetLocales=myTargetLocales_tr, fluff=fluff_tr);
   const stencil_int_marbl = new stencilDist(boundingBox=IntDomain_marbl, targetLocales=myTargetLocales_tr, fluff=fluff_tr);
@@ -66,6 +68,7 @@ use INPUTS;
   const D3_u = stencil_u.createDomain(FullDomain_u);
   const D3_v = stencil_v.createDomain(FullDomain_v);
 
+  const D3_int_2D = stencil_int_2D.createDomain(IntDomain_2D);
   const D3_int_3D = stencil_int_3D.createDomain(IntDomain_3D);
   const D3_int_ts = stencil_int_ts.createDomain(IntDomain_ts);
   const D3_int_marbl = stencil_int_marbl.createDomain(IntDomain_marbl);

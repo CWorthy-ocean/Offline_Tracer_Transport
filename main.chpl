@@ -25,18 +25,19 @@ proc main() {
     // timestepping loop
       for step in (Nt_start)..(Nt_start+Nt) {
 
-        var t0  : stopwatch;
-        var t1a : stopwatch;
-        var t1b : stopwatch;
-        var t1c : stopwatch;
+        var t0   : stopwatch;
+        var t1a  : stopwatch;
+        var t1b  : stopwatch;
+        var t1c  : stopwatch;
         var t2a  : stopwatch;
         var t2b  : stopwatch;
         var t2c  : stopwatch;
         var t3a  : stopwatch;
         var t3b  : stopwatch;
         var t3c  : stopwatch;
-        var t4  : stopwatch;
-        var t5  : stopwatch;
+        var t4   : stopwatch;
+        var t5   : stopwatch;
+        var t6   : stopwatch;
 
         prepare_to_timestep(step);
 
@@ -96,25 +97,34 @@ proc main() {
 
         allLocalesBarrier.barrier();
 
+
         t5.start();
-//        if ((step % output_freq) == 0) {
-//          WriteOutput(tracers_other_n, D3, "tracer", "stuff", step, 1);
-//	}
+        if ((step % write_freq) == 0) {
+          WriteOutput(tracers_other_n, D3, "tracer", "stuff", step, 1);
+	}
         t5.stop();
 
-        writeln("Locale ", here.id, " time for explicit step (ts): ", t1a.elapsed());
-        writeln("Locale ", here.id, " time for explicit step (marbl): ", t1b.elapsed());
-        writeln("Locale ", here.id, " time for explicit step (other): ", t1c.elapsed());
-        writeln("Locale ", here.id, " time for implicit step (ts): ", t2a.elapsed());
-        writeln("Locale ", here.id, " time for implicit step (marbl): ", t2b.elapsed());
-        writeln("Locale ", here.id, " time for implicit step (other): ", t2c.elapsed());
-        writeln("Locale ", here.id, " time for polyfit (ts): ", t3a.elapsed());
-        writeln("Locale ", here.id, " time for polyfit (marbl): ", t3b.elapsed());
-        writeln("Locale ", here.id, " time for polyfit (other): ", t3c.elapsed());
-        writeln("Locale ", here.id, " time for reading: ", t4.elapsed());
-        writeln("Locale ", here.id, " time for writing NetCDF: ", t5.elapsed());
-        writeln();
+        t6.start();
+        if ((step % restart_freq) == 0) {
+          WriteRestart(step);
+        }
+        t6.stop();
 
+        if ((step % report_freq) == 0) {
+          writeln("Locale ", here.id, " time for explicit step (ts): ", t1a.elapsed());
+          writeln("Locale ", here.id, " time for explicit step (marbl): ", t1b.elapsed());
+          writeln("Locale ", here.id, " time for explicit step (other): ", t1c.elapsed());
+          writeln("Locale ", here.id, " time for implicit step (ts): ", t2a.elapsed());
+          writeln("Locale ", here.id, " time for implicit step (marbl): ", t2b.elapsed());
+          writeln("Locale ", here.id, " time for implicit step (other): ", t2c.elapsed());
+          writeln("Locale ", here.id, " time for polyfit (ts): ", t3a.elapsed());
+          writeln("Locale ", here.id, " time for polyfit (marbl): ", t3b.elapsed());
+          writeln("Locale ", here.id, " time for polyfit (other): ", t3c.elapsed());
+          writeln("Locale ", here.id, " time for reading: ", t4.elapsed());
+          writeln("Locale ", here.id, " time for writing output: ", t5.elapsed());
+          writeln("Locale ", here.id, " time for writing restart file: ", t6.elapsed());
+          writeln();
+        }
 
     } // timestepping loop
     t.stop();

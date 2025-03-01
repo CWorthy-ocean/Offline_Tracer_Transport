@@ -72,7 +72,7 @@ proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
   forall (i,j,k) in D3_edge_u_w.localSubdomain() {
 
     // 1st-order interpolation (constant in the cell)
-      var tmp_l = max(U.localAccess[i,j,k], 0.0) * arr.localAccess[t,i,j,k] + min(U.localAccess[i,j,k], 0.0) * arr.localAccess[t,i+1,j,k];
+      var tmp_l = max(U.localAccess[i,j,k], 0.0) * arr.localAccess[i,j,t,k] + min(U.localAccess[i,j,k], 0.0) * arr.localAccess[i+1,j,t,k];
 
     // Limited flux
       tmp_U.localAccess[i,j,k] = tmp_l;
@@ -82,7 +82,7 @@ proc calc_horizontal_fluxes_U(ref U, ref tmp_U, ref arr, const t) {
   forall (i,j,k) in D3_edge_u_e.localSubdomain() {
 
     // 1st-order interpolation (constant in the cell)
-      var tmp_l = max(U.localAccess[i,j,k], 0.0) * arr.localAccess[t,i,j,k] + min(U.localAccess[i,j,k], 0.0) * arr.localAccess[t,i+1,j,k];
+      var tmp_l = max(U.localAccess[i,j,k], 0.0) * arr.localAccess[i,j,t,k] + min(U.localAccess[i,j,k], 0.0) * arr.localAccess[i+1,j,t,k];
 
     // Limited flux
       tmp_U.localAccess[i,j,k] = tmp_l;
@@ -122,7 +122,7 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
   forall (i,j,k) in D3_edge_v_s.localSubdomain() {
 
     // 1st-order interpolation (constant in the cell)
-      var tmp_l = max(V.localAccess[i,j,k], 0.0) * arr.localAccess[t,i,j,k] + min(V.localAccess[i,j,k], 0.0) * arr.localAccess[t,i,j+1,k];
+      var tmp_l = max(V.localAccess[i,j,k], 0.0) * arr.localAccess[i,j,t,k] + min(V.localAccess[i,j,k], 0.0) * arr.localAccess[i,j+1,t,k];
 
     // Limited flux
       tmp_V.localAccess[i,j,k] = tmp_l;
@@ -132,7 +132,7 @@ proc calc_horizontal_fluxes_V(ref V, ref tmp_V, ref arr, const t) {
   forall (i,j,k) in D3_edge_v_n.localSubdomain() {
 
     // 1st-order interpolation (constant in the cell)
-      var tmp_l = max(V.localAccess[i,j,k], 0.0) * arr.localAccess[t,i,j,k] + min(V.localAccess[i,j,k], 0.0) * arr.localAccess[t,i,j+1,k];
+      var tmp_l = max(V.localAccess[i,j,k], 0.0) * arr.localAccess[i,j,t,k] + min(V.localAccess[i,j,k], 0.0) * arr.localAccess[i,j+1,t,k];
 
     // Limited flux
       tmp_V.localAccess[i,j,k] = tmp_l;

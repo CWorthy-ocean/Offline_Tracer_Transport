@@ -6,7 +6,8 @@ config const maskfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assista
 config const hfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic/INPUTS/dye_grd.nc_perm';
 config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_rnd.??????????????.nc??_perm';
 config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_bry.??????????????.nc??_perm';
-config const forcing_files  = '/glade/derecho/scratch/bachman/UCLA-ROMS/run/Iceland1/AVG/Iceland1_bry.??????????????.nc';
+config const surface_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/surface_forcing.??????????????.nc??_perm';
+config const interior_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/interior_forcing.??????????????.nc??_perm';
 
 const num_ts_tracers = 2;
 const num_marbl_tracers = 0;
@@ -60,8 +61,11 @@ config const ord : int = 3;
 // A really small number;
 config const eps : real = 1e-16;
 
-// Output frequency (in timesteps);
-config const output_freq : int = 6;
+// I/O frequency (in timesteps);
+config const read_freq : int = 12;
+config const write_freq : int = 6;
+config const restart_freq : int = 100;
+config const report_freq : int = 100;
 
 // Tracers namelists
 var marbl_namelist = ["PO4", "NO3", "SiO3", "NH4", "Fe", "Lig", "O2", "DIC", "DIC_ALT_CO2",

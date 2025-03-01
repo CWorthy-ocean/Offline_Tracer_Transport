@@ -1,4 +1,6 @@
 use INPUTS;
+use domains;
+use tracers;
 
 use NetCDF.C_NetCDF;
 use CTypes;
@@ -367,6 +369,7 @@ proc set_bry(filename : string, varName : string, ref arr, dom_in, t) {
 
 
 var y: atomic int;
+var yr : atomic int;
 
 proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
 
@@ -413,8 +416,7 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
 
   /* Create the file. */
     extern proc nc_create(path : c_ptrConst(c_char), cmode : c_int, ncidp : c_ptr(c_int)) : c_int;
-    nc_create( filename.c_str(), NC_CLOBBER, c_ptrTo(ncid));
-
+    nc_create( filename.c_str(), NC_NETCDF4, c_ptrTo(ncid));
 
   /* Define the dimensions. The record dimension is defined to have
      unlimited length - it can grow as needed. In this example it is
@@ -462,6 +464,7 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
 
     nc_close(ncid); // comment this and nc_open out to work on 1 node
   }
+
   /////////////////////////////////
   allLocalesBarrier.barrier();
 
@@ -481,22 +484,13 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
 
     // Start specifies a hyperslab.  It expects an array of dimension sizes
       var start = tuplify(D.localSubdomain().first);
-//      var start_loc = (D.localSubdomain().first[1], D.localSubdomain().first[2], D.localSubdomain().first[3]);
     // Count specifies a hyperslab.  It expects an array of dimension sizes
       var count = tuplify(D.localSubdomain().shape);
-//      var count_loc = (D.localSubdomain().shape[1], D.localSubdomain().shape[2], D.localSubdomain().shape[3]);
 
   /* Adding an extra first element to account for the "time" dimension. */
-//    var start_c : [0..<start_loc.size] c_size_t;
-//    var count_c : [0..<count_loc.size] c_size_t;
-
     var start_c : [0..<start.size] c_size_t;
     var count_c : [0..<count.size] c_size_t;
 
-//    for i in 0..<start_loc.size {
-//      start_c[i] = start_loc[i] : c_size_t;
-//      count_c[i] = count_loc[i] : c_size_t;
-//    }
 
     for i in 0..<start.size {
       start_c[i] = start[i] : c_size_t;
@@ -520,6 +514,191 @@ proc WriteOutput(ref arr_in, D, varName : string, units : string, i : int, t) {
     y.write(inc);
 
 }
+
+
+proc WriteRestart(i : int) {
+
+  allLocalesBarrier.barrier();
+
+  /* The timestamp for the filename */
+    var currentIter = i : string;
+    const maxLen = 10;
+    const zero_len = maxLen - currentIter.size;
+    const paddedStr = (zero_len * "0") + currentIter;
+    var filename = ("restart." + paddedStr + ".nc");
+
+    if (here.id == 0) {
+  /* IDs for the netCDF file, dimensions, and variables. */
+
+    var tot_tracers = num_ts_tracers + num_marbl_tracers + num_other_tracers;
+
+    var ncid : c_int;
+    var varid : [0..<tot_tracers] c_int;
+    var x_dimid, y_dimid, z_dimid : c_int;
+    var x_varid, y_varid, z_varid : c_int;
+
+    var ndims : int = 3;
+    var dimids: [0..#ndims] c_int;
+
+    var shape = D3.shape;
+
+    var att_text : string;
+
+    var zo : [0..<shape[2]] real;
+    var yo : [0..<shape[1]] real;
+    var xo : [0..<shape[0]] real;
+
+    for ii in 0..<shape[2] {
+      zo[ii] = ii;
+    }
+    for ii in 0..<shape[1] {
+      yo[ii] = ii;
+    }
+    for ii in 0..<shape[0] {
+      xo[ii] = ii;
+    }
+    var zName = "z";
+    var yName = "y";
+    var xName = "x";
+
+  /* Create the file. */
+    extern proc nc_create(path : c_ptrConst(c_char), cmode : c_int, ncidp : c_ptr(c_int)) : c_int;
+    nc_create( filename.c_str(), NC_NETCDF4, c_ptrTo(ncid));
+
+  /* Define the dimensions. The record dimension is defined to have
+     unlimited length - it can grow as needed. In this example it is
+     the time dimension.*/
+    extern proc nc_def_dim(ncid : c_int, name : c_ptrConst(c_char), len : c_size_t, idp : c_ptr(c_int)) : c_int;
+    nc_def_dim(ncid, zName.c_str(), shape[2] : c_size_t, z_dimid);
+    nc_def_dim(ncid, yName.c_str(), shape[1] : c_size_t, y_dimid);
+    nc_def_dim(ncid, xName.c_str(), shape[0] : c_size_t, x_dimid);
+
+  /* Define the coordinate variables. */
+    extern proc nc_def_var(ncid : c_int, name : c_ptrConst(c_char), xtype : nc_type, ndims : c_int, dimidsp : c_ptr(c_int), varidp : c_ptr(c_int)) : c_int;
+    nc_def_var(ncid, zName.c_str(), NC_DOUBLE, 1 : c_int, c_ptrTo(z_dimid), c_ptrTo(z_varid));
+    nc_def_var(ncid, yName.c_str(), NC_DOUBLE, 1 : c_int, c_ptrTo(y_dimid), c_ptrTo(y_varid));
+    nc_def_var(ncid, xName.c_str(), NC_DOUBLE, 1 : c_int, c_ptrTo(x_dimid), c_ptrTo(x_varid));
+
+  /* Assign units attributes to coordinate variables. */
+    extern proc nc_put_att_text(ncid : c_int, varid : c_int, name : c_ptrConst(c_char), len : c_size_t, op : c_ptrConst(c_char)) : c_int;
+    att_text = "meters";
+    nc_put_att_text(ncid, z_varid, "units".c_str(), att_text.numBytes : c_size_t, att_text.c_str());
+    att_text = "meters";
+    nc_put_att_text(ncid, y_varid, "units".c_str(), att_text.numBytes : c_size_t, att_text.c_str());
+    att_text = "meters";
+    nc_put_att_text(ncid, x_varid, "units".c_str(), att_text.numBytes : c_size_t, att_text.c_str());
+
+  /* The dimids array is used to pass the dimids of the dimensions of
+     the netCDF variables. In C, the unlimited dimension must come first on the list of dimids. */
+    dimids[2] = z_dimid;
+    dimids[1] = y_dimid;
+    dimids[0] = x_dimid;
+
+    //nc_def_var(ncid, ts_namelist[0].c_str(), NC_DOUBLE, ndims : c_int, c_ptrTo(dimids[0]), c_ptrTo(varid));
+    //nc_def_var(ncid, ts_namelist[1].c_str(), NC_DOUBLE, ndims : c_int, c_ptrTo(dimids[0]), c_ptrTo(varid));
+
+    var count=0;
+    for idx in 1..num_ts_tracers {
+      nc_def_var(ncid, ts_namelist[idx-1].c_str(), NC_DOUBLE, ndims : c_int, c_ptrTo(dimids[0]), c_ptrTo(varid[count]));
+      count += 1;
+    }
+    for idx in 1..num_marbl_tracers {
+      nc_def_var(ncid, marbl_namelist[idx-1].c_str(), NC_DOUBLE, ndims : c_int, c_ptrTo(dimids[0]), c_ptrTo(varid[count]));
+      count += 1;
+    }
+    for idx in 1..num_other_tracers {
+      nc_def_var(ncid, other_namelist[idx-1].c_str(), NC_DOUBLE, ndims : c_int, c_ptrTo(dimids[0]), c_ptrTo(varid[count]));
+      count += 1;
+    }
+
+  /* End define mode. */
+    nc_enddef(ncid);
+
+  /* Write the coordinate variable data. */
+    extern proc nc_put_var_double(ncid : c_int, varid : c_int, op : c_ptr(c_double)) : c_int;
+    nc_put_var_double(ncid, z_varid, c_ptrTo(zo[0]));
+    nc_put_var_double(ncid, y_varid, c_ptrTo(yo[0]));
+    nc_put_var_double(ncid, x_varid, c_ptrTo(xo[0]));
+
+    nc_close(ncid); // comment this and nc_open out to work on 1 node
+  }
+  /////////////////////////////////
+
+  allLocalesBarrier.barrier();
+
+  yr.waitFor(here.id%numLocales);
+
+  var ncid, varid : c_int;
+
+  /* Declaration of nc_open */
+    extern proc nc_open(path : c_ptrConst(c_char), mode : c_int, ncidp : c_ptr(c_int)) : c_int;
+  // Open the file
+    nc_open( filename.c_str() , NC_WRITE, c_ptrTo(ncid));
+  /* Create arrays of c_size_t for compatibility with NetCDF-C functions. */
+  /* Determine where to start reading file, and how many elements to read */
+
+    var d_loc = D3.localSubdomain();
+
+    // Start specifies a hyperslab.  It expects an array of dimension sizes
+      var start = tuplify(D3.localSubdomain().first);
+    // Count specifies a hyperslab.  It expects an array of dimension sizes
+      var count = tuplify(D3.localSubdomain().shape);
+
+  /* Adding an extra first element to account for the "time" dimension. */
+
+    var start_c : [0..<start.size] c_size_t;
+    var count_c : [0..<count.size] c_size_t;
+
+    for i in 0..<start.size {
+      start_c[i] = start[i] : c_size_t;
+      count_c[i] = count[i] : c_size_t;
+    }
+
+    var arr_out : [D3.localSubdomain()] real;
+
+    for idx in 1..num_ts_tracers {
+      ref arr_in = tracers_ts_n;
+      arr_out = arr_in[d_loc.first[0]..d_loc.last[0], d_loc.first[1]..d_loc.last[1], idx, d_loc.first[2]..d_loc.last[2]];
+
+      extern proc nc_inq_varid(ncid: c_int, varName: c_ptrConst(c_char), varid: c_ptr(c_int));
+      var locName = ts_namelist[idx-1];
+      nc_inq_varid(ncid, locName.c_str(), c_ptrTo(varid));
+
+      extern proc nc_put_vara_double(ncid : c_int, varid : c_int, startp : c_ptr(c_size_t), countp : c_ptr(c_size_t), op : c_ptr(c_double)) : c_int;
+      nc_put_vara_double(ncid, varid, c_ptrTo(start_c), c_ptrTo(count_c), c_ptrTo(arr_out[start]));
+    }
+
+    for idx in 1..num_marbl_tracers {
+      ref arr_in = tracers_marbl_n;
+      arr_out = arr_in[d_loc.first[0]..d_loc.last[0], d_loc.first[1]..d_loc.last[1], idx, d_loc.first[2]..d_loc.last[2]];
+
+      extern proc nc_inq_varid(ncid: c_int, varName: c_ptrConst(c_char), varid: c_ptr(c_int));
+      var locName = marbl_namelist[idx-1];
+      nc_inq_varid(ncid, locName.c_str(), c_ptrTo(varid));
+
+      extern proc nc_put_vara_double(ncid : c_int, varid : c_int, startp : c_ptr(c_size_t), countp : c_ptr(c_size_t), op : c_ptr(c_double)) : c_int;
+      nc_put_vara_double(ncid, varid, c_ptrTo(start_c), c_ptrTo(count_c), c_ptrTo(arr_out[start]));
+    }
+
+    for idx in 1..num_other_tracers {
+      ref arr_in = tracers_other_n;
+      arr_out = arr_in[d_loc.first[0]..d_loc.last[0], d_loc.first[1]..d_loc.last[1], idx, d_loc.first[2]..d_loc.last[2]];
+
+      extern proc nc_inq_varid(ncid: c_int, varName: c_ptrConst(c_char), varid: c_ptr(c_int));
+      var locName = other_namelist[idx-1];
+      nc_inq_varid(ncid, locName.c_str(), c_ptrTo(varid));
+
+      extern proc nc_put_vara_double(ncid : c_int, varid : c_int, startp : c_ptr(c_size_t), countp : c_ptr(c_size_t), op : c_ptr(c_double)) : c_int;
+      nc_put_vara_double(ncid, varid, c_ptrTo(start_c), c_ptrTo(count_c), c_ptrTo(arr_out[start]));
+    }
+
+    nc_close(ncid);
+
+    const inc = (yr.read() + 1) % numLocales;
+    yr.write(inc);
+
+}
+
 
 inline proc tuplify(x) {
   if isTuple(x) then return x; else return (x,);
@@ -577,7 +756,7 @@ proc WriteOutput3(ref arr_in, D, varName : string, units : string, i : int) {
 
   /* Create the file. */
     extern proc nc_create(path : c_ptrConst(c_char), cmode : c_int, ncidp : c_ptr(c_int)) : c_int;
-    nc_create( filename.c_str(), NC_CLOBBER, c_ptrTo(ncid));
+    nc_create( filename.c_str(), NC_NETCDF4, c_ptrTo(ncid));
 
 
   /* Define the dimensions. The record dimension is defined to have

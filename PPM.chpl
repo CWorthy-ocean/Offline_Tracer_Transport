@@ -43,7 +43,7 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
       var H_new  : [0..<Nz] real;
       for kk in 0..<Nz {
         H_orig[kk] = H_dagger.localAccess[i,j,kk];
-        H_new[kk]  = H_np1.localAccess[i,j,kk];
+        H_new[kk]  = H_tmp2.localAccess[i,j,kk];
       }
 
     // Going to normalize the thicknesses to make the forthcoming loop logic and

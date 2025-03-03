@@ -1,4 +1,5 @@
 use AllLocalesBarriers;
+use FileSystem;
 //use Zarr;
 
 use domains;
@@ -16,7 +17,13 @@ use updates;
   var tmp_V_diff : [D3_v] real;
 
   var u_n : [D3_u] real;
+  var u_np1 : [D3_u] real;
+  var u_tmp : [D3_u] real;
   var v_n : [D3_v] real;
+  var v_np1 : [D3_v] real;
+  var v_tmp : [D3_v] real;
+
+  var velfiles = glob(velocity_files);
 
 proc calc_volumetric_fluxes(ref u, ref v, ref U, ref V, ref H) {
 

@@ -4,21 +4,22 @@ use FileSystem;
 
 config const maskfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic/INPUTS/dye_grd.nc_perm';
 config const hfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic/INPUTS/dye_grd.nc_perm';
-config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_rnd.??????????????.nc??_perm';
+config const initial_file = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic32/INPUTS/spinup_rst32.20120301000000.nc00_perm';
+config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_his.??????????????.nc??_perm';
 config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_bry.??????????????.nc??_perm';
-config const surface_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/surface_forcing.??????????????.nc??_perm';
-config const interior_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/interior_forcing.??????????????.nc??_perm';
+config const surface_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/surface_forcing.nc_perm';
+config const interior_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/interior_forcing.nc_perm';
 
-const num_ts_tracers = 2;
+const num_ts_tracers = 0;
 const num_marbl_tracers = 0;
-const num_other_tracers = 2;
+const num_other_tracers = 32;
 
 config const Nx = 1082;
 config const Ny = 1082;
 config const Nz = 100;
 
 /* Restart? */
-config const restart = 0;
+config var restart = false;
 config const restart_file = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/remove_time/tracer.0000003510.nc';
 config const Nt_start : int = 0;
 config const Nt : int = 4;
@@ -33,16 +34,12 @@ config const dy : real = 1000;
 const area = dx * dy;
 const iarea = 1.0 / area;
 
+/* Timesteps for OTT model and inputs */
 config const dt : real = 300.0;
+config const input_dt : real = 3600;
+const read_freq = (input_dt / dt) : int;
 
-// For LF-AM3 scheme
-config const gamma = 0.0833333333333;
-config const us = 0.16666666666666;
-
-// For AB3 scheme
-config const beta = 5.0/12.0;
-
-// For RK4 scheme
+// For 3rd-order upstream advection scheme
 config const one_sixth = 1.0 / 6.0;
 
 // For PPM scheme
@@ -52,9 +49,6 @@ config const one_third = 1.0 / 3.0;
 config const v_sponge : real = 100;
 config const sponge_width : real = 15;
 
-// Horizontal viscosity
-config const grid_Pe : real = 10;
-
 // Order of polynomial for boundary value extrapolation
 config const ord : int = 3;
 
@@ -62,7 +56,6 @@ config const ord : int = 3;
 config const eps : real = 1e-16;
 
 // I/O frequency (in timesteps);
-config const read_freq : int = 12;
 config const write_freq : int = 6;
 config const restart_freq : int = 100;
 config const report_freq : int = 100;

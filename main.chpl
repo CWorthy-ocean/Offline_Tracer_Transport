@@ -12,6 +12,7 @@ use forward_step;
 use tracers;
 use updates;
 //use marbl_step;
+use IO;
 
 proc main() {
   coforall loc in Locales do on loc {

@@ -7,6 +7,7 @@ use INPUTS;
 use NetCDF_IO;
 use tracers;
 use forcings;
+use IO;
 
 proc prepare_to_timestep(step : int) {
 
@@ -58,9 +59,29 @@ proc prepare_to_timestep(step : int) {
       H_tmp2.localAccess[i,j,k] = H0.localAccess[i,j,k] * (1 + zeta_tmp2.localAccess[i,j] / h.localAccess[i,j]);
     }
 
+/*
+  writeln("Initializing marbl wrapper cell geometry");
+  stdout.flush();
+  var littleDomain = {0..10, 0..10};
+  for (i,j) in littleDomain {
+    ref localH = H_tmp1.localSlice(H_tmp1.domain.localSubdomain());
+    var thicknesses_reversed: [0..<Nz] real;
+    for k in 0..<Nz do thicknesses_reversed[k] = localH[i,j,Nz-1-k];
+
+    var depths_reversed: [0..<Nz] real = + scan thicknesses_reversed[..];
+    var midpoints_reversed = depths_reversed - 0.5 * thicknesses_reversed[..];
+
+    marbl_wrappers[i,j].initMarblInstance(Nz, numParSubcols,
+      numElementsSurfaceFlux, thicknesses_reversed, depths_reversed, midpoints_reversed, Nz);
+  }
+  writeln("Done initializing");
+*/
+
   allLocalesBarrier.barrier();
   update_halos(H_tmp1);
   update_halos(H_tmp2);
+
+
 
   calc_volumetric_fluxes(u_tmp, v_tmp, U_n, V_n, H_tmp1);
 

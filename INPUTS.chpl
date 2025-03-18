@@ -72,3 +72,5 @@ var other_namelist = ["dye1", "dye2", "dye3", "dye4", "dye5", "dye6", "dye7", "d
                       "dye9", "dye10", "dye11", "dye12", "dye13", "dye14", "dye15", "dye16",
                       "dye17", "dye18", "dye19", "dye20", "dye21", "dye22", "dye23", "dye24",
                       "dye25", "dye26", "dye27", "dye28", "dye29", "dye30", "dye31", "dye32"];
+var numParSubcols = 1;
+var numElementsSurfaceFlux = 5;

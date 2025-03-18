@@ -15,19 +15,19 @@ proc Explicit_TimeStep_H() {
 
 var t0  : stopwatch;
 
-  // Update in x-direction
-    RHS_H_U(ktmp, U_n);
-    forall (i,j,k) in D3_int_3D.localSubdomain() {
-      H_tilde.localAccess[i,j,k] = H_tmp1.localAccess[i,j,k] + dt*ktmp.localAccess[i,j,k];
-    }
+  t0.start();
+  forall (i,j,k) in D3.localSubdomain() {
+    // RHS_H_U
+    var tmp = -iarea * (U_n.localAccess[i,j,k] - U_n.localAccess[i-1,j,k]);
+    H_tilde.localAccess[i,j,k] = H_tmp1.localAccess[i,j,k] + dt*tmp;
 
-  // Update in y-direction
-    RHS_H_V(ktmp, V_n);
-    forall (i,j,k) in D3_int_3D.localSubdomain() {
-      H_dagger.localAccess[i,j,k] = H_tilde.localAccess[i,j,k] + dt*ktmp.localAccess[i,j,k];
-    }
+    // RHS_H_V
+    tmp = -iarea * (V_n.localAccess[i,j,k] - V_n.localAccess[i,j-1,k]);
+    H_dagger.localAccess[i,j,k] = H_tilde.localAccess[i,j,k] + dt*tmp;
+  }
 
 }
+
 
 proc Explicit_TimeStep_tr(ref tracer_n, ref tracer_tilde, ref tracer_dagger, num_tracers, step : int) {
 
@@ -45,7 +45,7 @@ proc Explicit_TimeStep_tr(ref tracer_n, ref tracer_tilde, ref tracer_dagger, num
 
       RHS_tr_U(ktmp_tr, tmp_U_adv, tmp_U_diff);
 
-      forall (i,j,k) in D3_int_3D.localSubdomain() {
+      forall (i,j,k) in D3.localSubdomain() {
         tracer_tilde.localAccess[i,j,t,k] =  (tracer_n.localAccess[i,j,t,k]*H_tmp1.localAccess[i,j,k] + dt*ktmp_tr.localAccess[i,j,k]) / H_tilde.localAccess[i,j,k];
       }
     }
@@ -60,7 +60,7 @@ proc Explicit_TimeStep_tr(ref tracer_n, ref tracer_tilde, ref tracer_dagger, num
 
       RHS_tr_V(ktmp_tr, tmp_V_adv, tmp_V_diff);
 
-      forall (i,j,k) in D3_int_3D.localSubdomain() {
+      forall (i,j,k) in D3.localSubdomain() {
         tracer_dagger.localAccess[i,j,t,k] =  (tracer_tilde.localAccess[i,j,t,k]*H_tilde.localAccess[i,j,k] + dt*ktmp_tr.localAccess[i,j,k]) / H_dagger.localAccess[i,j,k];
       }
     }
@@ -81,25 +81,8 @@ proc Implicit_TimeStep(ref tracer_dagger, num_tracers) {
 
 }
 
-proc RHS_H_U(ref tmp, ref U) {
-
-  forall (i,j,k) in D3_int_3D.localSubdomain() {
-    tmp.localAccess[i,j,k] = -iarea * (U.localAccess[i,j,k] - U.localAccess[i-1,j,k]);
-  }
-
-}
-
-proc RHS_H_V(ref tmp, ref V) {
-
-  forall (i,j,k) in D3_int_3D.localSubdomain() {
-    tmp.localAccess[i,j,k] = -iarea * (V.localAccess[i,j,k] - V.localAccess[i,j-1,k]);
-  }
-
-}
-
 proc RHS_tr_U(ref tmp, ref adv_U, ref diff_U) {
-
-  forall (i,j,k) in D3_int_3D.localSubdomain() {
+  forall (i,j,k) in D3.localSubdomain() {
     tmp.localAccess[i,j,k] = - iarea * (  (adv_U.localAccess[i,j,k] - adv_U.localAccess[i-1,j,k])
                             - (diff_U.localAccess[i,j,k] - diff_U.localAccess[i-1,j,k]) );
   }
@@ -107,8 +90,7 @@ proc RHS_tr_U(ref tmp, ref adv_U, ref diff_U) {
 }
 
 proc RHS_tr_V(ref tmp, ref adv_V, ref diff_V) {
-
-  forall (i,j,k) in D3_int_3D.localSubdomain() {
+  forall (i,j,k) in D3.localSubdomain() {
     tmp.localAccess[i,j,k] = - iarea * (  (adv_V.localAccess[i,j,k] - adv_V.localAccess[i,j-1,k])
                               - (diff_V.localAccess[i,j,k] - diff_V.localAccess[i,j-1,k]) );
   }

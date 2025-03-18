@@ -5,8 +5,8 @@ use FileSystem;
 config const maskfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic/INPUTS/dye_grd.nc_perm';
 config const hfile = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic/INPUTS/dye_grd.nc_perm';
 config const initial_file = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic32/INPUTS/spinup_rst32.20120301000000.nc00_perm';
-config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_his.??????????????.nc??_perm';
-config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic2/run_OTT/OUTPUT/JOINED/dye_bry.??????????????.nc??_perm';
+config const velocity_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic32/run_OTT/OUTPUT/HIS/dye_his.??????????????.nc??_perm';
+config const boundary_files = '/glade/derecho/scratch/bachman/roms_marbl_setup_assistant/cases/dye_Atlantic32/run_OTT/OUTPUT/HIS/dye_bry.??????????????.nc??_perm';
 config const surface_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/surface_forcing.nc_perm';
 config const interior_forcing_files  = '/glade/derecho/scratch/bachman/chapel_experiments/offline_BGC/Offline_Tracer_Transport/BGC_inputs/interior_forcing.nc_perm';
 
@@ -56,8 +56,8 @@ config const ord : int = 3;
 config const eps : real = 1e-16;
 
 // I/O frequency (in timesteps);
-config const write_freq : int = 6;
-config const restart_freq : int = 100;
+config const write_freq : int = 0;
+config const restart_freq : int = 120;
 config const report_freq : int = 100;
 
 // Tracers namelists
@@ -68,4 +68,7 @@ var marbl_namelist = ["PO4", "NO3", "SiO3", "NH4", "Fe", "Lig", "O2", "DIC", "DI
 
 var ts_namelist = ["temp", "salt"];
 
-var other_namelist = ["dye1", "dye2"];
+var other_namelist = ["dye1", "dye2", "dye3", "dye4", "dye5", "dye6", "dye7", "dye8",
+                      "dye9", "dye10", "dye11", "dye12", "dye13", "dye14", "dye15", "dye16",
+                      "dye17", "dye18", "dye19", "dye20", "dye21", "dye22", "dye23", "dye24",
+                      "dye25", "dye26", "dye27", "dye28", "dye29", "dye30", "dye31", "dye32"];

@@ -91,7 +91,7 @@ proc prepare_to_timestep(step : int) {
 proc prepare_next_timestep(step : int) {
 
   // Load the boundary data for the upcoming timestep
-    var bryloc = bryfiles[step+1];
+    var bryloc = bryfiles[0];
     for t in 1..num_ts_tracers {
       set_bry(bryloc, ts_namelist[t-1], tracers_ts_n, D3.localSubdomain(), t);
     }

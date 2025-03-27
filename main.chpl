@@ -45,18 +45,7 @@ proc main() {
         //Step MARBL wrappers forward
 //        step_marbl_wrappers(step);
 
-/*
-        var tot_mass : [1..num_other_tracers] real = 0;
-        var sums_before : [1..num_other_tracers] real = 0;
-        var sums_after : [1..num_other_tracers] real = 0;
 
-        if (here.id == 0) {
-        for i in 1..num_other_tracers {
-          sums_before[i] = + reduce (H_tmp1 * tracers_other_n[..,..,i,..]);
-        }
-        }
-        allLocalesBarrier.barrier();
-*/
         // Step forward thickness
         t0.start();
         Explicit_TimeStep_H();
@@ -74,6 +63,7 @@ proc main() {
         t1c.start();
         Explicit_TimeStep_tr(tracers_other_n, tracers_other_tilde, tracers_other_dagger, num_other_tracers, step);
         t1c.stop();
+
 
         t2a.start();
         Implicit_TimeStep(tracers_ts_dagger, num_ts_tracers);
@@ -100,20 +90,7 @@ proc main() {
         t3c.start();
         Polyfit(tracers_other_n, tracers_other_dagger, num_other_tracers);
         t3c.stop();
-/*
-        if (here.id == 0){
-        for i in 1..num_other_tracers {
-          tot_mass[i] = + reduce (tracers_other_n[..,..,i,..]);
-          sums_after[i] = + reduce (H_tmp2 * tracers_other_n[..,..,i,..]);
-        }
 
-        for i in 1..num_other_tracers {
-          writeln("Total mass for tracer ", i, ": ", tot_mass[i]);
-          writeln("Difference for tracer ", i, ": ", (sums_after[i] - sums_before[i]));
-        }
-        }
-        allLocalesBarrier.barrier();
-*/
 
         // Update fields to prepare for next time step
         t4.start();

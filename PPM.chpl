@@ -36,9 +36,7 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
       a2[t,k] = 3*(interface_values[t,k] + interface_values[t,k+1] - 2*tracer_dagger.localAccess[i,j,t,k]);
     }
 
-    // These are vector copies of each column.  H_orig is going to have one extra layer
-    // to allow the reconstruction loop to exit gracefully.
-
+    // These are vector copies of each column.
       var H_orig : [0..<Nz] real;
       var H_new  : [0..<Nz] real;
       for kk in 0..<Nz {
@@ -46,61 +44,105 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
         H_new[kk]  = H_tmp2.localAccess[i,j,kk];
       }
 
+      var total_tracer_orig : [1..num_tracers] real = 0;
+      for (t,k) in {1..num_tracers,0..<Nz} {
+        total_tracer_orig[t] += H_orig[k] * tracer_dagger.localAccess[i,j,t,k];
+      }
+
     // Going to normalize the thicknesses to make the forthcoming loop logic and
     // tracer conservation a bit easier. This is just for bookkeeping here and will not
     // affect the actual thicknesses.
-      H_new = H_new * (+ reduce H_orig) / (+ reduce H_new);
+      var H_new_tot = + reduce H_new;
+      var H_orig_tot = + reduce H_orig;
 
-    // These represent the indices in each column
-      var k_orig = 0;
-      var curr_k_new  = 0;
+      H_orig = H_orig * H_new_tot / H_orig_tot;
 
-    // These represent how much thickness we have left before we exit the current cell
-      var curr_H_orig : real = H_orig[0];
-      var curr_H_new  : real = H_new[0];
+    // The division and multiplication in the above step may not make the total column thicknesses
+    // match exactly, so one more really small correction will be added to the top layer.
+      H_orig_tot = + reduce H_orig;
+      H_orig[Nz-1] += H_new_tot - H_orig_tot;
 
-    // These identify our position within the current cell
-      var z0 : real = 0;
-      var z1 : real = 1;
+    // Also keep track of the original interface depths.
+      var z_orig_interfaces : [0..Nz] real;
+      for k in 0..<Nz {
+        z_orig_interfaces[k+1] = z_orig_interfaces[k] + H_orig[k];
+      }
 
-    // This holds the reconstruction
-      var reconstruction : [1..num_tracers, 0..<Nz] real;
+    // For each interface in H_new, figure out in which cell of H_orig it lies
+    var curr_src_index = 0;
+    var tgt_index_start : [0..<Nz] int = 0;
+    var tgt_index_end : [0..<Nz] int = 0;
 
-      var tol = 1e-5;
+    // Keep track of how far up we are in the water column
+    var curr_tgt_height = H_new[0];
+    var curr_src_height = H_orig[0];
 
-    // Going to overwrite tracer_n with the interpolated values
-      label ko for k_new in 0..<Nz {
-        curr_H_new = H_new[k_new];
+    // Keep track of where in each H_orig cell the interfaces of H_new are
+    var tgt_frac_start : [0..<Nz] real = 0;
+    var tgt_frac_end : [0..<Nz] real = 0;
 
-        while (k_orig < Nz) {
+    for k_new in 0..<(Nz-1) {
 
-          while (curr_H_new >= tol) {
+      while (curr_tgt_height > curr_src_height) {
+        curr_src_index += 1;
+        curr_src_height += H_orig[curr_src_index];
+      }
 
-            curr_H_orig = H_orig[k_orig];
+      tgt_index_end[k_new] = curr_src_index;
+      tgt_index_start[k_new+1] = curr_src_index;
 
-            z1 = min(1, z0 + curr_H_new / curr_H_orig);
-            var frac = (z1 - z0) * curr_H_orig / H_new[k_new];
-            for t in 1..num_tracers {
-              var tmp = integrate(a0[t,k_orig], a1[t,k_orig], a2[t,k_orig], z0, z1);
-              reconstruction[t,k_new] = reconstruction[t,k_new] + frac*tmp;
-            }
-            curr_H_new = max(0, curr_H_new - (z1-z0)*curr_H_orig);
-            z0 = 0;
-            // Increment k_orig only if z1 = 1
-            k_orig += (floor(z1) : int);
+      tgt_frac_end[k_new] = (curr_tgt_height - z_orig_interfaces[curr_src_index]) / H_orig[curr_src_index];
+      tgt_frac_start[k_new+1] = tgt_frac_end[k_new];
 
-          }
-          // This will ensure z0 = 0 if z1 = 1; otherwise if z1<1 then z0=z1
-          z0 = z1 - floor(z1);
+      curr_tgt_height += H_new[k_new+1];
 
-          continue ko;
+    }
+    tgt_index_end[Nz-1] = Nz-1;
+    tgt_frac_end[Nz-1] = 1;
 
+    // This holds the integrated_values
+    var definite_integral : [1..num_tracers, 0..<Nz] real = 0;
+
+    for (t,k) in {1..num_tracers,0..<(Nz-1)} {
+
+      var tot_dist : real = 0;
+      for idx in tgt_index_start[k]..tgt_index_end[k] {
+
+        if (tgt_index_start[k] == tgt_index_end[k]) {
+          definite_integral[t,k] = integrate(a0[t,idx], a1[t,idx], a2[t,idx], tgt_frac_start[k], tgt_frac_end[k]);
+          tot_dist = tgt_frac_end[k] - tgt_frac_start[k];
         }
-      }
+        else if ((idx == tgt_index_start[k]) && (idx < tgt_index_end[k])) {
+          definite_integral[t,k] = integrate(a0[t,idx], a1[t,idx], a2[t,idx], tgt_frac_start[k], 1);
+          tot_dist = 1 - tgt_frac_start[k];
+        }
+        else if ((idx < tgt_index_end[k]) && (idx > tgt_index_start[k])) {
+          definite_integral[t,k] = definite_integral[t,k] + integrate(a0[t,idx], a1[t,idx], a2[t,idx], 0, 1);
+          tot_dist = tot_dist + 1;
+        }
+        else {
+          definite_integral[t,k] = definite_integral[t,k] + integrate(a0[t,idx], a1[t,idx], a2[t,idx], 0, tgt_frac_end[k]);
+          tot_dist = tot_dist + tgt_frac_end[k];
+        }
 
-      for (t,kk) in {1..num_tracers,0..<Nz} {
-        tracer_n.localAccess[i,j,t,kk] = reconstruction[t,kk];
       }
+      tracer_n.localAccess[i,j,t,k] = definite_integral[t,k] / tot_dist;
+    }
+
+    var total_tracer_new : [1..num_tracers] real = 0;
+    for (t,k) in {1..num_tracers,0..<(Nz-1)} {
+      total_tracer_new[t] += H_new[k] * tracer_n.localAccess[i,j,t,k];
+    }
+    // Can I just take a guess at this, instead of doing this whole calculation?
+    for t in 1..num_tracers {
+      tracer_n.localAccess[i,j,t,Nz-1] = (total_tracer_orig[t] - total_tracer_new[t]) / H_new[Nz-1];
+    }
+
+    total_tracer_new = 0;
+    for (t,k) in {1..num_tracers,0..<Nz} {
+      total_tracer_new[t] += H_new[k] * tracer_n.localAccess[i,j,t,k];
+    }
+    tracer_n.localAccess[i,j,1,Nz-1] += total_tracer_orig[1] - total_tracer_new[1];
 
     } // mask_rho
 
@@ -113,12 +155,9 @@ proc Polyfit(ref tracer_n, ref tracer_dagger, num_tracers) {
 
 proc integrate(a0, a1, a2, z0, z1) {
 
-  // definite_integral = a0 * (z1 - z0) + 0.5*a1*(z1**2 - z0**2) + one_third*a2*(z1**3 - z0**3);
-  // Mean = definite integral / interval = definite integral / (z1 - z0);
+  var definite_integral = a0 * (z1 - z0) + 0.5*a1*(z1**2 - z0**2) + one_third*a2*(z1**3 - z0**3);
 
-  var mean_of_integral = a0 + 0.5*a1*(z1 + z0) + one_third*a2*(z1**2 + z1*z0 + z0**2);
-
-  return mean_of_integral;
+  return definite_integral;
 }
 
 proc calc_interface_values(i, j, ref arr, ref H, num_tracers) {

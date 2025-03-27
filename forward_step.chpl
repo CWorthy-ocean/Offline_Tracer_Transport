@@ -13,9 +13,6 @@ use vertical_diffusion;
 
 proc Explicit_TimeStep_H() {
 
-var t0  : stopwatch;
-
-  t0.start();
   forall (i,j,k) in D3.localSubdomain() {
     // RHS_H_U
     var tmp = -iarea * (U_n.localAccess[i,j,k] - U_n.localAccess[i-1,j,k]);

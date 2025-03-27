@@ -12,7 +12,7 @@ config const interior_forcing_files  = '/glade/derecho/scratch/bachman/chapel_ex
 
 const num_ts_tracers = 0;
 const num_marbl_tracers = 0;
-const num_other_tracers = 32;
+const num_other_tracers = 1;
 
 config const Nx = 1082;
 config const Ny = 1082;
